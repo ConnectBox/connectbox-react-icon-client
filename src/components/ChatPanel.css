@@ -1,15 +1,31 @@
 /* Top-level collapsed table */
 /* popup positioned absolutely */
-.chat-window {
-    background-color: #CCEFEB;
-    border-radius: 4px;
-    position: absolute;
-    top: 10px;
-    left: 20px;
-    right: 20px;
-    bottom: 10px;
-    overflow: hidden;
+@media only screen and (max-width: 768px) {
+  .chat-window {
+      background-color: #CCEFEB;
+      border-radius: 4px;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      right: 0px;
+      bottom: 0px;
+      overflow: hidden;
+  }
 }
+
+@media only screen and (min-width: 769px) {
+  .chat-window {
+      background-color: #CCEFEB;
+      border-radius: 4px;
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      right: 20px;
+      bottom: 10px;
+      overflow: hidden;
+  }
+}
+
 
 .close-button {
   position: absolute;
