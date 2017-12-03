@@ -87,6 +87,9 @@ export class ChatPanel extends Component {
   handleMessageSend = () => {
     const { nick } = this.props
     const { messageInput } = this.state
+    if (messageInput.trim() === '') {
+      return
+    }
     this.props.sendMessage({
       nick, body: messageInput
     })
@@ -204,9 +207,9 @@ export class ChatPanel extends Component {
               value={messageInput}
               autoFocus
               ></input>
-            <button className='button-send' onClick={this.handleMessageSend}>
-              <i className='fa fa-caret-right' aria-hidden='true'></i>
-            </button>
+            <div className='button-send' onClick={this.handleMessageSend}>
+              <i className='fa fa-arrow-right fa-lg' aria-hidden='true'></i>
+            </div>
           </div>
         </div>
       </div>

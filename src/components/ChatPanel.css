@@ -122,6 +122,7 @@ div.spacer {
     background-color: #FCFCFC;
     text-align: center;
     border-radius: 4px;
+    padding-top: 2px;
 }
 
 .input-message {
@@ -131,4 +132,7 @@ div.spacer {
 .button-send {
     width: 60px;
     margin-left: 5px;
+    cursor: pointer;
+    text-align: center;
+    padding-right: 10px;
 }
