@@ -46,16 +46,21 @@ export class ChatPanel extends Component {
 
   componentDidMount () {
     this.props.clearMention()
+    this.updateMessagePanelScrollPosition()
   }
 
   componentDidUpdate () {
+    this.updateMessagePanelScrollPosition()
+  }
+
+  componentWillUnmount () {
+  }
+
+  updateMessagePanelScrollPosition = () => {
     if (!this.state.userScrolled) {
       const messagesPanel = document.getElementById('messages-panel')
       messagesPanel.scrollTop = messagesPanel.scrollHeight
     }
-  }
-
-  componentWillUnmount () {
   }
 
   handleShowEditNick = () => {
