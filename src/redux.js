@@ -1,5 +1,27 @@
+import { generateNick } from './utils'
+
 export function getContent (contentPath, callback) {
   return { type: 'CONTENT_FETCH_REQUESTED', payload: { contentPath, callback } }
+}
+
+export function sendMessage (message, callback) {
+  return { type: 'MESSAGE_SEND_REQUESTED', message }
+}
+
+export function getMessages (callback) {
+  return { type: 'MESSAGES_FETCH_REQUESTED' }
+}
+
+export function fetchNick (callback) {
+  return { type: 'FETCH_NICK_REQUESTED' }
+}
+
+export function saveNick (nick, callback) {
+  return { type: 'SAVE_NICK_REQUESTED', nick }
+}
+
+export function getNewMessages (callback) {
+  return { type: 'NEW_MESSAGES_FETCH_REQUESTED' }
 }
 
 export function setConfigPath (configPath, callback) {
@@ -8,6 +30,14 @@ export function setConfigPath (configPath, callback) {
     path = '/config/default.json'
   }
   return { type: 'SET_CONFIG_PATH', payload: {configPath: path} }
+}
+
+export function clearMention (callback) {
+  return { type: 'CLEAR_MENTION' }
+}
+
+export function toggleChatPanel (showing, callback) {
+  return { type: 'TOGGLE_CHAT_PANEL', showing }
 }
 
 export const initialState = {
@@ -161,5 +191,72 @@ const handlers = {
 
   'STATS_FETCH_FAILED': (state, action) => {
     return { ...state, error: action.message }
+  },
+
+  'MESSAGES_FETCH_START': (state, action) => {
+    return { ...state, error: action.message, loadingMessages: true }
+  },
+
+  'MESSAGES_FETCH_SUCCEEDED': (state, action) => {
+    const { messages } = action
+    return {
+      ...state,
+      maxMessageId: messages.length > 0 ? messages.reduce((max, message) =>
+        message.id > max ? message.id : max, 0) : state.maxMessageId,
+      messages: Object.assign({}, state.messages, messages.reduce((map, message) => {
+        map[message.id] = message
+        return map
+      }, {})),
+      mention: action.checkMentions ? (state.mention ? true : messages.reduce((mentioned, message) => {
+        if (!mentioned) {
+          if (message.body.indexOf(`@${state.nick}`) !== -1) {
+            return true
+          }
+          return false
+        }
+        return true
+      }, false)) : false,
+      loadingMessages: false
+    }
+  },
+
+  'MESSAGES_FETCH_FAILED': (state, action) => {
+    return { ...state, error: action.message, loadingMessages: false }
+  },
+
+  'MESSAGE_SEND_SUCCEEDED': (state, action) => {
+    return {
+      ...state,
+      sentMessages: [
+        ...state.sentMessages,
+        action.messageId
+      ]
+    }
+  },
+
+  'MESSAGE_SEND_FAILED': (state, action) => {
+    return { ...state, error: action.message }
+  },
+
+  'FETCH_NICK_SUCCEEDED': (state, action) => {
+    let nick = action.nick
+    if (!nick) {
+      nick = generateNick()
+      saveNick(nick)
+    }
+    return { ...state, nick }
+  },
+
+  'SAVE_NICK_SUCCEEDED': (state, action) => {
+    return { ...state, nick: action.nick }
+  },
+
+  'TOGGLE_CHAT_PANEL': (state, action) => {
+    return { ...state, chatPanelShowing: action.showing }
+  },
+
+  'CLEAR_MENTION': (state, action) => {
+    return { ...state, mention: false }
   }
+
 }

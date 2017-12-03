@@ -1,8 +1,35 @@
+.navigation-bar {
+}
+
+.chat-button {
+    position: relative;
+    float: right;
+    z-index: 1200;
+    cursor: pointer;
+}
+
+.chat-icon {
+    padding-top: 11px;
+}
+
 #scroll-to-top {
     position: fixed;
     z-index: 2000;
     right: 30px;
     top: 1.25em;
+}
+
+@keyframes shake {
+    from { transform: translateY(-4px); }
+    to { transform: translateY(0px); }
+}
+
+.chat-mention {
+    animation-name: shake;
+    animation-duration: .3s;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(.52,.4,.75,-0.01);
 }
 
 a {

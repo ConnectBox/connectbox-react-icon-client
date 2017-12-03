@@ -1,10 +1,94 @@
-import { call, put, takeLatest, select } from 'redux-saga/effects'
-import {getContent, getConfig, getStats} from './api'
+import {
+  call,
+  put,
+  takeLatest,
+  select } from 'redux-saga/effects'
+import {
+  getContent,
+  getConfig,
+  getMessages,
+  getStats,
+  postMessage } from './api'
 
 const checkNeedsConfig = (state) => state.needsConfig
 const getConfigPath = (state) => state.configPath
 const getConfigFromStore = (state) => state.config
 const getPopularFiles = (state) => state.popularFiles
+const getMaxMessageId = (state) => state.maxMessageId
+
+function * fetchNick (action) {
+  const nick = localStorage.getItem('cb-chat-nick')
+
+  yield put({
+    type: 'FETCH_NICK_SUCCEEDED',
+    nick: nick
+  })
+}
+
+function * saveNick (action) {
+  localStorage.setItem('cb-chat-nick', action.nick)
+
+  yield put({
+    type: 'SAVE_NICK_SUCCEEDED',
+    nick: action.nick
+  })
+}
+
+function * sendMessage (action) {
+  const { message } = action
+
+  try {
+    const res = yield call(postMessage, message)
+
+    if (res.result && res.result.id) {
+      yield put({
+        type: 'MESSAGE_SEND_SUCCEEDED',
+        messageId: res.result.id
+      })
+      yield put({
+        type: 'NEW_MESSAGES_FETCH_REQUESTED'
+      })
+    } else {
+      yield put({
+        type: 'MESSAGE_SEND_FAILED',
+        message
+      })
+    }
+  } catch (e) {
+    console.error(e)
+    yield put({type: 'MESSAGE_SEND_FAILED', message})
+  }
+}
+
+function * fetchNewMessages (action) {
+  try {
+    yield put({type: 'MESSAGES_FETCH_START'})
+    const maxMessageId = yield select(getMaxMessageId)
+    const res = yield call(getMessages, maxMessageId)
+    yield put({
+      type: 'MESSAGES_FETCH_SUCCEEDED',
+      messages: res ? res.result : [],
+      checkMentions: true
+    })
+  } catch (e) {
+    console.error(e)
+    yield put({type: 'MESSAGES_FETCH_FAILED', message: 'Failed to load messages'})
+  }
+}
+
+function * fetchMessages (action) {
+  try {
+    yield put({type: 'MESSAGES_FETCH_START'})
+    const res = yield call(getMessages)
+    yield put({
+      type: 'MESSAGES_FETCH_SUCCEEDED',
+      messages: res.result
+    })
+  } catch (e) {
+    console.error(e)
+    yield put({type: 'MESSAGES_FETCH_FAILED', message: 'Failed to load messages'})
+  }
+}
 
 // worker Saga: will be fired on USER_FETCH_REQUESTED actions
 function * fetchContent (action) {
@@ -61,6 +145,11 @@ function * fetchContent (action) {
 */
 function * mySaga () {
   yield takeLatest('CONTENT_FETCH_REQUESTED', fetchContent)
+  yield takeLatest('MESSAGES_FETCH_REQUESTED', fetchMessages)
+  yield takeLatest('NEW_MESSAGES_FETCH_REQUESTED', fetchNewMessages)
+  yield takeLatest('MESSAGE_SEND_REQUESTED', sendMessage)
+  yield takeLatest('FETCH_NICK_REQUESTED', fetchNick)
+  yield takeLatest('SAVE_NICK_REQUESTED', saveNick)
 }
 
 /*
