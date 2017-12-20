@@ -1,5 +1,3 @@
-import { generateNick } from './utils'
-
 export function getContent (contentPath, callback) {
   return { type: 'CONTENT_FETCH_REQUESTED', payload: { contentPath, callback } }
 }
@@ -239,12 +237,7 @@ const handlers = {
   },
 
   'FETCH_NICK_SUCCEEDED': (state, action) => {
-    let nick = action.nick
-    if (!nick) {
-      nick = generateNick()
-      saveNick(nick)
-    }
-    return { ...state, nick }
+    return { ...state, nick: action.nick }
   },
 
   'SAVE_NICK_SUCCEEDED': (state, action) => {

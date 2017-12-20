@@ -1,3 +1,4 @@
+import { generateNick } from './utils'
 import {
   call,
   put,
@@ -17,17 +18,20 @@ const getPopularFiles = (state) => state.popularFiles
 const getMaxMessageId = (state) => state.maxMessageId
 
 function * fetchNick (action) {
-  const nick = localStorage.getItem('cb-chat-nick')
+  let nick = localStorage.getItem('cb-chat-nick')
+  if (!nick || nick === 'undefined') {
+    nick = generateNick()
+    localStorage.setItem('cb-chat-nick', nick)
+  }
 
   yield put({
     type: 'FETCH_NICK_SUCCEEDED',
-    nick: nick
+    nick
   })
 }
 
 function * saveNick (action) {
   localStorage.setItem('cb-chat-nick', action.nick)
-
   yield put({
     type: 'SAVE_NICK_SUCCEEDED',
     nick: action.nick
