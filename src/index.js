@@ -43,6 +43,7 @@ let initialState = {
   mention: false,
   messages: {},
   needsConfig: true,
+  newMessages: false,
   nick: null,
   loading: false,
   popularFiles: null,

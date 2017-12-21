@@ -1,7 +1,7 @@
 import './ChatPanel.css'
 
 import {
-  clearMention,
+  clearMessageNotifications,
   saveNick,
   saveTextDirection,
   sendMessage,
@@ -19,7 +19,7 @@ function mapStateToProps (state) {
 }
 
 const mapDispatchToProps = {
-  clearMention,
+  clearMessageNotifications,
   sendMessage,
   saveNick,
   saveTextDirection,
@@ -46,7 +46,7 @@ export class ChatPanel extends Component {
   }
 
   componentDidMount () {
-    this.props.clearMention()
+    this.props.clearMessageNotifications()
     this.updateMessagePanelScrollPosition()
   }
 
@@ -55,6 +55,7 @@ export class ChatPanel extends Component {
   }
 
   componentWillUnmount () {
+    this.props.clearMessageNotifications()
   }
 
   updateMessagePanelScrollPosition = () => {

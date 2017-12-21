@@ -32,6 +32,7 @@ function mapStateToProps (state) {
     iconMetadata,
     loading,
     mention,
+    newMessages,
     popularFiles,
     topLevelFiles
   } = state
@@ -44,6 +45,7 @@ function mapStateToProps (state) {
     iconMetadata,
     loading,
     mention,
+    newMessages,
     popularFiles,
     topLevelFiles
   }
@@ -73,6 +75,7 @@ export class ConnectBoxApp extends Component {
         loading: PropTypes.bool.isRequired,
         location: PropTypes.object.isRequired,
         mention: PropTypes.bool.isRequired,
+        newMessages: PropTypes.bool.isRequired,
         popularFiles: PropTypes.array,
         setConfigPath: PropTypes.func.isRequired,
         toggleChatPanel: PropTypes.func.isRequired,
@@ -167,9 +170,32 @@ export class ConnectBoxApp extends Component {
       return null
     }
 
+    renderChatButton = () => {
+      const { mention, newMessages } = this.props
+      const newMessageOnClass = !mention && newMessages ? 'chat-new-message-on' : ''
+      const newMessageOffClass = !mention && newMessages ? 'chat-new-message-off' : ''
+      const mentionClass = mention ? 'chat-mention' : ''
+      return (
+        <div className='chat-button' onClick={this.onChatClick}>
+          <i
+            style={{position: 'absolute', top: 0, right: 0, display: !mention && newMessages ? 'block' : 'none'}}
+            className={`fa fa-comments-o fa-lg chat-icon ${newMessageOnClass}`}
+            aria-hidden='true'></i>
+          <i
+            style={{position: 'absolute', top: 0, right: 0, display: !mention && newMessages ? 'block' : 'none'}}
+            className={`fa fa-comments fa-lg chat-icon ${newMessageOffClass}`}
+            aria-hidden='true'></i>
+          <i
+            style={{position: 'absolute', top: 0, right: 0, display: !newMessages ? 'block' : 'none'}}
+            className={`fa fa-comments fa-lg chat-icon ${mentionClass}`}
+            aria-hidden='true'></i>
+        </div>
+      )
+    }
+
     renderContent = () => {
       const {showScrollToTop} = this.state
-      const { content, contentPath, config, error, mention, iconMetadata, topLevelFiles, loading, popularFiles } = this.props
+      const { content, contentPath, config, error, iconMetadata, topLevelFiles, loading, popularFiles } = this.props
 
       const isRoot = contentPath === '' || contentPath === '/'
 
@@ -187,11 +213,7 @@ export class ConnectBoxApp extends Component {
                 contentPath={contentPath}
                 reload={this.reload}
                 loading={loading}/>
-              <div className="chat-button" onClick={this.onChatClick}>
-                <i
-                  className={`fa fa-comments fa-lg chat-icon ${mention ? 'chat-mention' : ''}`}
-                  aria-hidden='true'></i>
-              </div>
+              {this.renderChatButton()}
           </div>
 
             {!error && isRoot &&

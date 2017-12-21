@@ -38,8 +38,8 @@ export function setConfigPath (configPath, callback) {
   return { type: 'SET_CONFIG_PATH', payload: {configPath: path} }
 }
 
-export function clearMention (callback) {
-  return { type: 'CLEAR_MENTION' }
+export function clearMessageNotifications (callback) {
+  return { type: 'CLEAR_MESSAGE_NOTIFICATIONS' }
 }
 
 export function toggleChatPanel (showing, callback) {
@@ -205,6 +205,15 @@ const handlers = {
 
   'MESSAGES_FETCH_SUCCEEDED': (state, action) => {
     const { messages } = action
+    const mention = action.checkMentions ? (state.mention ? true : messages.reduce((mentioned, message) => {
+      if (!mentioned) {
+        if (message.body.indexOf(`@${state.nick}`) !== -1) {
+          return true
+        }
+        return false
+      }
+      return true
+    }, false)) : false
     return {
       ...state,
       maxMessageId: messages.length > 0 ? messages.reduce((max, message) =>
@@ -213,16 +222,9 @@ const handlers = {
         map[message.id] = message
         return map
       }, {})),
-      mention: action.checkMentions ? (state.mention ? true : messages.reduce((mentioned, message) => {
-        if (!mentioned) {
-          if (message.body.indexOf(`@${state.nick}`) !== -1) {
-            return true
-          }
-          return false
-        }
-        return true
-      }, false)) : false,
-      loadingMessages: false
+      mention,
+      loadingMessages: false,
+      newMessages: !mention && state.maxMessageId && (state.newMessages || (messages && messages.length > 0))
     }
   },
 
@@ -264,8 +266,8 @@ const handlers = {
     return { ...state, chatPanelShowing: action.showing }
   },
 
-  'CLEAR_MENTION': (state, action) => {
-    return { ...state, mention: false }
+  'CLEAR_MESSAGE_NOTIFICATIONS': (state, action) => {
+    return { ...state, mention: false, newMessages: false }
   }
 
 }
