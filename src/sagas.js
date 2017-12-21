@@ -9,6 +9,7 @@ import {
   getConfig,
   getMessages,
   getStats,
+  getDefaultTextDirection,
   postMessage } from './api'
 
 const checkNeedsConfig = (state) => state.needsConfig
@@ -35,6 +36,28 @@ function * saveNick (action) {
   yield put({
     type: 'SAVE_NICK_SUCCEEDED',
     nick: action.nick
+  })
+}
+
+function * fetchTextDirection (action) {
+  let textDirection = localStorage.getItem('cb-chat-text-direction')
+  if (!textDirection || textDirection === 'undefined') {
+    const res = yield call(getDefaultTextDirection)
+    textDirection = res.result
+    localStorage.setItem('cb-chat-text-direction', textDirection)
+  }
+
+  yield put({
+    type: 'FETCH_TEXT_DIRECTION_SUCCEEDED',
+    textDirection
+  })
+}
+
+function * saveTextDirection (action) {
+  localStorage.setItem('cb-chat-text-direction', action.textDirection)
+  yield put({
+    type: 'SAVE_TEXT_DIRECTION_SUCCEEDED',
+    textDirection: action.textDirection
   })
 }
 
@@ -154,6 +177,8 @@ function * mySaga () {
   yield takeLatest('MESSAGE_SEND_REQUESTED', sendMessage)
   yield takeLatest('FETCH_NICK_REQUESTED', fetchNick)
   yield takeLatest('SAVE_NICK_REQUESTED', saveNick)
+  yield takeLatest('FETCH_TEXT_DIRECTION_REQUESTED', fetchTextDirection)
+  yield takeLatest('SAVE_TEXT_DIRECTION_REQUESTED', saveTextDirection)
 }
 
 /*

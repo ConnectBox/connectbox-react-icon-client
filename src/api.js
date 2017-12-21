@@ -12,6 +12,10 @@ export function getMessages (max_id = null) {
   }
 }
 
+export function getDefaultTextDirection () {
+  return get('/chat/messages/textDirection')
+}
+
 export function getContent (contentPath) {
   return get(`/content/${contentPath}/`)
 }

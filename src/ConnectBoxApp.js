@@ -9,6 +9,7 @@ import { withRouter } from 'react-router'
 
 import {
   fetchNick,
+  fetchTextDirection,
   getContent,
   getMessages,
   getNewMessages,
@@ -50,6 +51,7 @@ function mapStateToProps (state) {
 
 const mapDispatchToProps = {
   fetchNick,
+  fetchTextDirection,
   getContent,
   getMessages,
   getNewMessages,
@@ -110,6 +112,7 @@ export class ConnectBoxApp extends Component {
 
     componentDidMount () {
       this.props.fetchNick()
+      this.props.fetchTextDirection()
       this.props.getContent(this.props.location.hash.substring(1))
       this.historyUnlisten = this.props.history.listen((location, action) => {
         this.props.getContent(location.hash.substring(1))

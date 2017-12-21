@@ -18,6 +18,14 @@ export function saveNick (nick, callback) {
   return { type: 'SAVE_NICK_REQUESTED', nick }
 }
 
+export function fetchTextDirection (callback) {
+  return { type: 'FETCH_TEXT_DIRECTION_REQUESTED' }
+}
+
+export function saveTextDirection (textDirection, callback) {
+  return { type: 'SAVE_TEXT_DIRECTION_REQUESTED', textDirection }
+}
+
 export function getNewMessages (callback) {
   return { type: 'NEW_MESSAGES_FETCH_REQUESTED' }
 }
@@ -242,6 +250,14 @@ const handlers = {
 
   'SAVE_NICK_SUCCEEDED': (state, action) => {
     return { ...state, nick: action.nick }
+  },
+
+  'FETCH_TEXT_DIRECTION_SUCCEEDED': (state, action) => {
+    return { ...state, textDirection: action.textDirection }
+  },
+
+  'SAVE_TEXT_DIRECTION_SUCCEEDED': (state, action) => {
+    return { ...state, textDirection: action.textDirection }
   },
 
   'TOGGLE_CHAT_PANEL': (state, action) => {

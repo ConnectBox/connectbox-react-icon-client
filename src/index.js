@@ -46,7 +46,8 @@ let initialState = {
   nick: null,
   loading: false,
   popularFiles: null,
-  sentMessages: []
+  sentMessages: [],
+  textDirection: 'ltr'
 }
 let store = createStore(reducer, initialState, compose(applyMiddleware(sagaMiddleware), devTools()))
 

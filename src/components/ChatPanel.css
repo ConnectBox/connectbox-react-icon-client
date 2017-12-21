@@ -97,6 +97,12 @@ div.message-nick {
     font-size: smaller;
 }
 
+div.sent-message-nick {
+    margin-right: 15px;
+    font-size: smaller;  
+    text-align: right;
+}
+
 div.spacer {
   flex-grow: 1;
 }
@@ -127,6 +133,16 @@ div.spacer {
 
 .input-message {
     flex-grow: 1;
+}
+
+.button-text-direction {
+  margin-top: 2px;
+  margin-right: 4px;
+  cursor: pointer;
+}
+
+.horizontal-flip {
+  transform: scaleX(-1);
 }
 
 .button-send {

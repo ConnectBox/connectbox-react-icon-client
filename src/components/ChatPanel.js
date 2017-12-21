@@ -2,8 +2,8 @@ import './ChatPanel.css'
 
 import {
   clearMention,
-  fetchNick,
   saveNick,
+  saveTextDirection,
   sendMessage,
   toggleChatPanel
 } from '../redux'
@@ -14,15 +14,15 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 
 function mapStateToProps (state) {
-  const { messages, sentMessages, nick } = state
-  return { messages, sentMessages, nick }
+  const { messages, sentMessages, nick, textDirection } = state
+  return { messages, sentMessages, nick, textDirection }
 }
 
 const mapDispatchToProps = {
   clearMention,
   sendMessage,
-  fetchNick,
   saveNick,
+  saveTextDirection,
   toggleChatPanel
 }
 
@@ -31,7 +31,8 @@ export class ChatPanel extends Component {
     nick: PropTypes.string.isRequired,
     messages: PropTypes.object.isRequired,
     sendMessage: PropTypes.func.isRequired,
-    sentMessages: PropTypes.array.isRequired
+    sentMessages: PropTypes.array.isRequired,
+    textDirection: PropTypes.string.isRequired
   }
 
   constructor(props) {
@@ -90,17 +91,23 @@ export class ChatPanel extends Component {
   }
 
   handleMessageSend = () => {
-    const { nick } = this.props
+    const { nick, textDirection } = this.props
     const { messageInput } = this.state
     if (messageInput.trim() === '') {
       return
     }
     this.props.sendMessage({
-      nick, body: messageInput
+      body: messageInput,
+      nick,
+      textDirection
     })
     this.setState({
       messageInput: ''
     })
+  }
+
+  handleToggleTextDirection = () => {
+    this.props.saveTextDirection(this.props.textDirection === 'ltr' ? 'rtl' : 'ltr')
   }
 
   handleScroll = (evt) => {
@@ -145,7 +152,8 @@ export class ChatPanel extends Component {
     const mentionIndex = message.body.indexOf(mentionToken)
     if (mentionIndex !== -1) {
       return (
-        <span className='message-mention'>
+        <span
+          className='message-mention'>
           {body.substring(0, mentionIndex)}
           <strong>{mentionToken}</strong>
           {body.substring(mentionIndex + mentionToken.length)}
@@ -154,6 +162,24 @@ export class ChatPanel extends Component {
     } else {
       return message.body
     }
+  }
+
+  renderTextDirectionButton = () => {
+    const { textDirection } = this.props
+    const reversed = textDirection === 'rtl'
+    return (
+      <div
+        className={
+          `button-text-direction ${
+            reversed ? 'horizontal-flip' : ''}`
+        }
+        onClick={this.handleToggleTextDirection}>
+        <i
+          className='fa fa-align-left fa-lg'
+          aria-hidden='true'>
+        </i>
+      </div>
+    )
   }
 
   render () {
@@ -186,13 +212,18 @@ export class ChatPanel extends Component {
               const isSent = sentMessages.includes(message.id) ||
                 message.nick === nick
               const messageStyle = isSent ? 'sent-message' : 'message'
-              const messageBodyStyle = isSent ? 'sent-message-body' : 'message-body'              
+              const messageBodyStyle = isSent ? 'sent-message-body' : 'message-body'
+              const nickStyle = isSent ? 'sent-message-nick' : 'message-nick'
+              const { textDirection = 'ltr' } = message
               return (
                 <div key={`msg${i}`} className={messageStyle}>
-                  <div key={`body${i}`} className={messageBodyStyle}>
+                  <div
+                    key={`body${i}`}
+                    className={messageBodyStyle}
+                    style={{direction: textDirection}}>
                     {this.renderMessageBody(message, mentionToken)}
                   </div>
-                  <div key={`nick${i}`} className='message-nick'>
+                  <div key={`nick${i}`} className={nickStyle}>
                     {ts.toLocaleDateString()} {ts.toLocaleTimeString()} - {message.nick}
                   </div>
                 </div>
@@ -204,11 +235,13 @@ export class ChatPanel extends Component {
           </div>
           <div className='input-panel'>
             {this.renderNick()}
+            {this.renderTextDirectionButton()}
             <input
               type='text'
               className='input-message'
               onChange={this.handleMessageUpdate}
               onKeyUp={this.handleMessageUpdate}
+              style={{direction: this.props.textDirection}}
               value={messageInput}
               autoFocus
               ></input>
