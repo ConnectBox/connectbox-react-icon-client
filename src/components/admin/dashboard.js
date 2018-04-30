@@ -8,6 +8,7 @@ import Hostname from './hostname'
 import Password from './password'
 import Ssid from './ssid'
 import StaticSite from './static-site'
+import System from './system'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
 
@@ -20,6 +21,8 @@ import {
 //  - can have a separate property on the dashboard that actually displays the update message
 //  - SSID needs a wait for update where it polls the value until it gets updated
 //  - router - for dashboard so url updates when you click around
+//  - Footer is in the incorrect place - not at the bottom
+//  - How are we handling errors? I think redux is setting a message but not displaying it
 
 const adminRoot = '/admin/'
 
@@ -40,12 +43,6 @@ class AdminPanel extends Component {
       this.props.checkAuthenticated() // api call triggering authentication
     }
   }
-
-  // componentWillReceiveProps (nextProps) {
-  //   if (!nextProps.authenticated) {
-  //     this.props.checkAuthenticated()
-  //   }
-  // }
 
   render () {
     const { authenticated, propertyUpdating } = this.props
@@ -159,12 +156,7 @@ class AdminPanel extends Component {
           }
           {selected === 'system' &&
             (<div>
-              <ul>
-                <li>Unmount USB</li>
-                <li>Shutdown</li>
-                <li>Reboot</li>
-                <li>Reset</li>
-              </ul>
+              <System />
             </div>
             )
           }

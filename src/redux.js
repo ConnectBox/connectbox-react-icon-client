@@ -297,7 +297,7 @@ const handlers = {
   },
 
   'SET_PROPERTY_FAILED': (state, action) => {
-    return { ...state, adminError: action.message}
+    return { ...state, adminError: action.message, propertyUpdating: false}
   },
 
   'SET_PROPERTY_SUCCEEDED': (state, action) => {
@@ -312,12 +312,16 @@ const handlers = {
   },
 
   'TRIGGER_EVENT_FAILED': (state, action) => {
-    return { ...state, adminError: action.message}
+    return { ...state, adminError: action.message, propertyUpdating: false}
   },
 
   'TRIGGER_EVENT_SUCCEEDED': (state, action) => {
     const {name, event} = action
-    return { ...state, [`evt_${name.replace('-', '_')}`]: event, authenticated: true}
+    return { ...state, [`evt_${name.replace('-', '_')}`]: event, authenticated: true, propertyUpdating: false}
+  },
+
+  'TRIGGER_EVENT_START': (state, action) => {
+    return { ...state, propertyUpdating: true }
   },
 
   'SET_PROPERTY_START': (state, action) => {

@@ -90,7 +90,7 @@ function * performTriggerEvent (action) {
   yield put({type: 'TRIGGER_EVENT_START'})
   const {propertyName, eventType} = action.payload
   try {
-    const res = yield call(triggerEvent, propertyName)
+    const res = yield call(triggerEvent, propertyName, eventType)
     const {code} = res
     if (code === 0) {
       yield put({
