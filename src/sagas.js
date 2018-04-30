@@ -239,7 +239,7 @@ function * fetchContent (action) {
     if (popularFiles === null && (contentPath === '' || contentPath === '/')) {
       const config = yield select(getConfigFromStore)
       try {
-        const stats = yield call(getStats, config.Client.stats_file)
+        const stats = yield call(getStats, `${process.env.PUBLIC_URL}/${config.Client.stats_file}`)
         yield put({
           type: 'STATS_FETCH_SUCCEEDED',
           stats: stats
