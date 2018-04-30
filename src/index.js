@@ -37,7 +37,7 @@ let initialState = {
   },
   content: [],
   // DEFAULT CONFIG PATH
-  configPath: '/config/default.json',
+  configPath: 'config/default.json',
   contentPath: '',
   error: undefined,
   iconMetadata: window.iconMetadata,
