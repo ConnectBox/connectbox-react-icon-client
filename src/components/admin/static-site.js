@@ -65,8 +65,8 @@ class StaticSite extends Component {
       <div>
         <ConfirmDialog
           isOpen={showUpdateDialog}
-          title={`Static site ${staticsite ? 'enabled' : 'disabled'}`}
-          body={`Static site is now ${staticsite ? 'enabled' : 'disabled'}`}
+          title={`Static site ${staticsite === 'true' ? 'enabled' : 'disabled'}`}
+          body={`Static site is now ${staticsite === 'true' ? 'enabled' : 'disabled'}`}
           handleOk={this.clearDialog}/>
         <form>
           <label>
