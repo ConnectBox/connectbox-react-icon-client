@@ -28,6 +28,18 @@ export function getStats (statsPath) {
   return get(statsPath, {})
 }
 
+export function getProperty (propertyName) {
+  return get(`api/${propertyName}`)
+}
+
+export function setProperty (propertyName, propertyValue, wrap) {
+  return put(`api/${propertyName}`, wrap ? {value: propertyValue} : propertyValue)
+}
+
+export function triggerEvent (propertyName, eventType) {
+  return post(`api/${propertyName}`, {value: eventType})
+}
+
 function get (url, defaultValue) {
   return axios.get(url).then(resp => resp.data).catch(e => {
     if (defaultValue) {
@@ -39,6 +51,12 @@ function get (url, defaultValue) {
 
 function post (url, body) {
   return axios.post(url, body).then(resp => resp.data).catch(e => {
+    throw e
+  })
+}
+
+function put (url, body) {
+  return axios.put(url, body).then(resp => resp.data).catch(e => {
     throw e
   })
 }

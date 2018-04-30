@@ -1,3 +1,19 @@
+export function checkAuthenticated () {
+  return { type: 'CHECK_AUTH_REQUESTED' }
+}
+
+export function setProperty (propertyName, propertyValue, wrap = true, callback) {
+  return { type: 'SET_PROPERTY_REQUESTED', payload: {propertyName, propertyValue, wrap, callback} }
+}
+
+export function getProperty (propertyName, callback) {
+  return { type: 'GET_PROPERTY_REQUESTED', payload: {propertyName, callback}}
+}
+
+export function triggerEvent (propertyName, eventType, callback) {
+  return { type: 'TRIGGER_EVENT_REQUESTED', payload: {propertyName, eventType, callback}}
+}
+
 export function getContent (contentPath, callback) {
   return { type: 'CONTENT_FETCH_REQUESTED', payload: { contentPath, callback } }
 }
@@ -269,6 +285,50 @@ const handlers = {
 
   'CLEAR_MESSAGE_NOTIFICATIONS': (state, action) => {
     return { ...state, mention: false, newMessages: false }
-  }
+  },
 
+  'GET_PROPERTY_FAILED': (state, action) => {
+    return { ...state, adminError: action.message}
+  },
+
+  'GET_PROPERTY_SUCCEEDED': (state, action) => {
+    const {name, value} = action
+    return { ...state, [`prop_${name.replace('-', '_')}`]: name === 'ui-config' ? JSON.parse(value) : value, authenticated: true}
+  },
+
+  'SET_PROPERTY_FAILED': (state, action) => {
+    return { ...state, adminError: action.message}
+  },
+
+  'SET_PROPERTY_SUCCEEDED': (state, action) => {
+    const {name, value} = action
+    const nameSafe = name.replace('-', '_')
+    return { ...state,
+      [`prop_${nameSafe}`]: value,
+      latestPropUpdate: nameSafe,
+      authenticated: nameSafe !== 'password',
+      propertyUpdating: false
+    }
+  },
+
+  'TRIGGER_EVENT_FAILED': (state, action) => {
+    return { ...state, adminError: action.message}
+  },
+
+  'TRIGGER_EVENT_SUCCEEDED': (state, action) => {
+    const {name, event} = action
+    return { ...state, [`evt_${name.replace('-', '_')}`]: event, authenticated: true}
+  },
+
+  'SET_PROPERTY_START': (state, action) => {
+    return { ...state, propertyUpdating: true }
+  },
+
+  'CHECK_AUTH_SUCCEEDED': (state, action) => {
+    return { ...state, authenticated: true}
+  },
+
+  'CHECK_AUTH_FAILED': (state, action) => {
+    return { ...state, authenticated: false}
+  }
 }

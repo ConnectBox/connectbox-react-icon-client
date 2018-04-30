@@ -1,0 +1,14 @@
+.required {
+  border-color: red;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
+.updating {
+  cursor: progress;
+}

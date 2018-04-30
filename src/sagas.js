@@ -2,6 +2,7 @@ import { generateNick } from './utils'
 import {
   call,
   put,
+  takeEvery,
   takeLatest,
   select } from 'redux-saga/effects'
 import {
@@ -10,6 +11,9 @@ import {
   getMessages,
   getStats,
   getDefaultTextDirection,
+  getProperty,
+  setProperty,
+  triggerEvent,
   postMessage } from './api'
 
 const checkNeedsConfig = (state) => state.needsConfig
@@ -17,6 +21,91 @@ const getConfigPath = (state) => state.configPath
 const getConfigFromStore = (state) => state.config
 const getPopularFiles = (state) => state.popularFiles
 const getMaxMessageId = (state) => state.maxMessageId
+
+function * performCheckAuth (action) {
+  yield put({type: 'CHECK_AUTH_START'})
+  try {
+    const res = yield call(getProperty, 'ui-config')
+    const { code } = res
+    if (code === 0) {
+      yield put({
+        type: 'CHECK_AUTH_SUCCEEDED'
+      })
+    } else {
+      yield put({
+        type: 'CHECK_AUTH_FAILED'
+      })
+    }
+  } catch (err) {
+    console.error(err)
+    yield put({
+      type: 'CHECK_AUTH_FAILED'
+    })
+  }
+}
+
+function * performSetProperty (action) {
+  yield put({type: 'SET_PROPERTY_START'})
+  const {propertyName, propertyValue, wrap} = action.payload
+  try {
+    const res = yield call(setProperty, propertyName, propertyValue, wrap)
+    const {code} = res
+    if (code === 0) {
+      yield put({
+        type: 'SET_PROPERTY_SUCCEEDED',
+        name: propertyName,
+        value: propertyValue
+      })
+    } else {
+      yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} code: ${code}`})
+    }
+  } catch (err) {
+    console.error(err)
+    yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} due to unexpected error`})
+  }
+}
+
+function * performGetProperty (action) {
+  yield put({type: 'GET_PROPERTY_START'})
+  const {propertyName} = action.payload
+  try {
+    const res = yield call(getProperty, propertyName)
+    const {code, result} = res
+    if (code === 0) {
+      yield put({
+        type: 'GET_PROPERTY_SUCCEEDED',
+        name: propertyName,
+        value: result[0]
+      })
+    } else {
+      yield put({type: 'GET_PROPERTY_FAILED', message: `Failed to get ${propertyName} code: ${code}`})
+    }
+  } catch (err) {
+    console.error(err)
+    yield put({type: 'GET_PROPERTY_FAILED', message: `Failed to get ${propertyName} due to unexpected error`})
+  }
+}
+
+function * performTriggerEvent (action) {
+  yield put({type: 'TRIGGER_EVENT_START'})
+  const {propertyName, eventType} = action.payload
+  try {
+    const res = yield call(triggerEvent, propertyName)
+    const {code} = res
+    if (code === 0) {
+      yield put({
+        type: 'TRIGGER_EVENT_SUCCEEDED',
+        name: propertyName,
+        event: eventType
+      })
+    } else {
+      yield put({type: 'TRIGGER_EVENT_FAILED', message: `Failed to trigger event ${propertyName} code: ${code}`})
+    }
+  } catch (err) {
+    console.error(err)
+    yield put({type: 'TRIGGER_EVENT_FAILED', message: `Failed to trigger event ${propertyName} due to unexpected error`})
+  }
+}
 
 function * fetchNick (action) {
   let nick = localStorage.getItem('cb-chat-nick')
@@ -166,10 +255,6 @@ function * fetchContent (action) {
   }
 }
 
-/*
-  Starts fetchUser on each dispatched `USER_FETCH_REQUESTED` action.
-  Allows concurrent fetches of user.
-*/
 function * mySaga () {
   yield takeLatest('CONTENT_FETCH_REQUESTED', fetchContent)
   yield takeLatest('MESSAGES_FETCH_REQUESTED', fetchMessages)
@@ -179,17 +264,10 @@ function * mySaga () {
   yield takeLatest('SAVE_NICK_REQUESTED', saveNick)
   yield takeLatest('FETCH_TEXT_DIRECTION_REQUESTED', fetchTextDirection)
   yield takeLatest('SAVE_TEXT_DIRECTION_REQUESTED', saveTextDirection)
+  yield takeLatest('CHECK_AUTH_REQUESTED', performCheckAuth)
+  yield takeEvery('GET_PROPERTY_REQUESTED', performGetProperty)
+  yield takeEvery('SET_PROPERTY_REQUESTED', performSetProperty)
+  yield takeEvery('TRIGGER_EVENT_REQUESTED', performTriggerEvent)
 }
-
-/*
-  Alternatively you may use takeLatest.
-
-  Does not allow concurrent fetches of user. If "USER_FETCH_REQUESTED" gets
-  dispatched while a fetch is already pending, that pending fetch is cancelled
-  and only the latest one will be run.
-*/
-// function* mySaga() {
-//   yield takeLatest("USER_FETCH_REQUESTED", fetchUser);
-// }
 
 export default mySaga

@@ -20,6 +20,7 @@ const devTools =
 const sagaMiddleware = createSagaMiddleware()
 
 let initialState = {
+  authenticated: false,
   chatPanelShowing: false,
   // DEFAULT CONFIG
   config: {
@@ -48,7 +49,14 @@ let initialState = {
   loading: false,
   popularFiles: null,
   sentMessages: [],
-  textDirection: 'ltr'
+  textDirection: 'ltr',
+  propertyUpdating: false,
+  latestPropUpdate: '',
+  prop_ssid: '',
+  prop_channel: '1',
+  prop_ui_config: {},
+  prop_hostname: '',
+  prop_staticsite: 'false'
 }
 let store = createStore(reducer, initialState, compose(applyMiddleware(sagaMiddleware), devTools()))
 
