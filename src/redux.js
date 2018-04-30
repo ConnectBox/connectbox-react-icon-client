@@ -49,7 +49,7 @@ export function getNewMessages (callback) {
 export function setConfigPath (configPath, callback) {
   let path = configPath
   if (!path) {
-    path = 'config/default.json'
+    path = `${process.env.PUBLIC_URL}/config/default.json`
   }
   return { type: 'SET_CONFIG_PATH', payload: {configPath: path} }
 }

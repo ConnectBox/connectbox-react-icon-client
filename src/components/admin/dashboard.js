@@ -23,6 +23,7 @@ import {
 //  - router - for dashboard so url updates when you click around
 //  - Footer is in the incorrect place - not at the bottom
 //  - How are we handling errors? I think redux is setting a message but not displaying it
+//  - Not clear if there is a better way to deal with the relative asset loading thing
 
 const adminRoot = '/admin/'
 

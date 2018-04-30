@@ -18,7 +18,6 @@ const devTools =
   (() => noop => noop)
 
 const sagaMiddleware = createSagaMiddleware()
-
 let initialState = {
   authenticated: false,
   chatPanelShowing: false,
@@ -37,7 +36,7 @@ let initialState = {
   },
   content: [],
   // DEFAULT CONFIG PATH
-  configPath: 'config/default.json',
+  configPath: `${process.env.PUBLIC_URL}/config/default.json`,
   contentPath: '',
   error: undefined,
   iconMetadata: window.iconMetadata,
