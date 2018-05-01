@@ -3,7 +3,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import ConnectBoxApp from './ConnectBoxApp'
-import registerServiceWorker from './registerServiceWorker'
 import { Provider } from 'react-redux'
 
 import { createStore, applyMiddleware, compose } from 'redux'
@@ -68,4 +67,3 @@ ReactDOM.render(
     </BrowserRouter>
   </Provider>
     , document.getElementById('root'))
-registerServiceWorker()
