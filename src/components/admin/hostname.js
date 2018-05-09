@@ -10,14 +10,16 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { latestPropUpdate, prop_hostname, propertyUpdating } = state
-  return { hostname: prop_hostname, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_hostname, propertyUpdating } = state
+  return { adminError, adminLoadError, hostname: prop_hostname, latestPropUpdate, propertyUpdating }
 }
 
 const mapDispatchToProps = {
   getProperty,
   setProperty
 }
+
+const displayName = 'Hostname'
 
 class Hostname extends Component {
   constructor (props) {
@@ -26,7 +28,9 @@ class Hostname extends Component {
     this.state = {
       hostname: props.hostname,
       updating: false,
-      showUpdateDialog: false
+      showUpdateDialog: false,
+      adminError: null,
+      adminLoadError: null
     }
   }
 
@@ -35,10 +39,16 @@ class Hostname extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.latestPropUpdate === 'hostname' && this.state.updating) {
-      this.setState({hostname: nextProps.hostname, updating: false, showUpdateDialog: true})
+    if (nextProps.adminError) {
+      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+    } else if (nextProps.adminLoadError) {
+      this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
-      this.setState({hostname: nextProps.hostname})
+      if (nextProps.latestPropUpdate === 'hostname' && this.state.updating) {
+        this.setState({hostname: nextProps.hostname, updating: false, showUpdateDialog: true})
+      } else {
+        this.setState({hostname: nextProps.hostname})
+      }
     }
   }
 
@@ -62,23 +72,43 @@ class Hostname extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { hostname, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, hostname, showUpdateDialog } = this.state
 
     return (
-      <div>
-        <ConfirmDialog
+      <div className='admin-component'>
+        {adminError && 
+          <ConfirmDialog
           isOpen={showUpdateDialog}
-          title={`Host name updated to '${hostname}'`}
-          body={`Host name updated to ${hostname}, click OK to continue`}
+          title={`${displayName} not updated`}
+          body={`${adminError}`}
           handleOk={this.clearDialog}/>
-        <input type='text' value={hostname} onChange={this.handleInputUpdate} size='25'/>
-        <button onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
+        }
+        {adminLoadError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`Unable to load ${displayName} setting`}
+          body={`${adminLoadError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
+          <ConfirmDialog
+            isOpen={showUpdateDialog}
+            title={`Host name updated to '${hostname}'`}
+            body={`Host name updated to ${hostname}, click OK to continue`}
+            handleOk={this.clearDialog}/>
+        }
+        <form className='form-inline'>
+          <input className='string form-control admin-input' type='text' value={hostname} onChange={this.handleInputUpdate} size='25'/>
+          <button className='btn btn-default' onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
+        </form>
       </div>
     )
   }
 }
 
 Hostname.propTypes = {
+  adminError: PropTypes.string,
+  adminLoadError: PropTypes.string,
   hostname: PropTypes.string.isRequired,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,

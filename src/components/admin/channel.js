@@ -10,14 +10,16 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { latestPropUpdate, prop_channel, propertyUpdating } = state
-  return { channel: prop_channel, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_channel, propertyUpdating } = state
+  return { adminError, adminLoadError, channel: prop_channel, latestPropUpdate, propertyUpdating }
 }
 
 const mapDispatchToProps = {
   getProperty,
   setProperty
 }
+
+const displayName = 'Channel'
 
 class Channel extends Component {
   constructor (props) {
@@ -26,7 +28,9 @@ class Channel extends Component {
     this.state = {
       channel: props.channel,
       updating: false,
-      showUpdateDialog: false
+      showUpdateDialog: false,
+      adminError: null,
+      adminLoadError: null
     }
   }
 
@@ -35,10 +39,16 @@ class Channel extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.latestPropUpdate === 'channel' && this.state.updating) {
-      this.setState({channel: nextProps.channel, updating: false, showUpdateDialog: true})
+    if (nextProps.adminError) {
+      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+    } else if (nextProps.adminLoadError) {
+      this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
-      this.setState({channel: nextProps.channel})
+      if (nextProps.latestPropUpdate === 'channel' && this.state.updating) {
+        this.setState({channel: nextProps.channel, updating: false, showUpdateDialog: true})
+      } else {
+        this.setState({channel: nextProps.channel})
+      }
     }
   }
 
@@ -60,36 +70,60 @@ class Channel extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { channel, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, channel, showUpdateDialog } = this.state
     return (
-      <div>
-        <ConfirmDialog
+      <div className='admin-component'>
+        {adminError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`${displayName} not updated`}
+          body={`${adminError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {adminLoadError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`Unable to load ${displayName} setting`}
+          body={`${adminLoadError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
+          <ConfirmDialog
           isOpen={showUpdateDialog}
           title='Wireless channel successfully updated'
           body={`Wireless channel updated to '${channel}'`}
           handleOk={this.clearDialog}/>
-        <select
-          onChange={this.handleInputUpdate}
-          value={channel}>
-          <option>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
-          <option>5</option>
-          <option>6</option>
-          <option>7</option>
-          <option>8</option>
-          <option>9</option>
-          <option>10</option>
-          <option>11</option>
-        </select>
-        <button onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
+        }
+        <form className='form-inline'>
+          <select
+            className="string form-control admin-input"
+            onChange={this.handleInputUpdate}
+            value={channel}>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+            <option>7</option>
+            <option>8</option>
+            <option>9</option>
+            <option>10</option>
+            <option>11</option>
+          </select>
+          <button 
+            className='btn btn-default'
+            onClick={this.handleUpdate} 
+            disabled={propertyUpdating}>Update</button>
+        </form>
       </div>
     )
   }
 }
 
 Channel.propTypes = {
+  adminError: PropTypes.string,
+  adminLoadError: PropTypes.string,
   channel: PropTypes.string.isRequired,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,

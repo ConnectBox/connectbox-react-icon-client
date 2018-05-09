@@ -10,14 +10,16 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { latestPropUpdate, prop_staticsite, propertyUpdating } = state
-  return { staticsite: prop_staticsite, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_staticsite, propertyUpdating } = state
+  return { adminError, adminLoadError, staticsite: prop_staticsite, latestPropUpdate, propertyUpdating }
 }
 
 const mapDispatchToProps = {
   getProperty,
   setProperty
 }
+
+const displayName = 'Static Site Setting'
 
 class StaticSite extends Component {
   constructor (props) {
@@ -26,7 +28,9 @@ class StaticSite extends Component {
     this.state = {
       staticsite: props.staticsite,
       updating: false,
-      showUpdateDialog: false
+      showUpdateDialog: false,
+      adminError: null,
+      adminLoadError: null
     }
   }
 
@@ -35,10 +39,16 @@ class StaticSite extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.latestPropUpdate === 'staticsite' && this.state.updating) {
-      this.setState({staticsite: nextProps.staticsite, updating: false, showUpdateDialog: true})
+    if (nextProps.adminError) {
+      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+    } else if (nextProps.adminLoadError) {
+      this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
-      this.setState({staticsite: nextProps.staticsite})
+      if (nextProps.latestPropUpdate === 'staticsite' && this.state.updating) {
+        this.setState({staticsite: nextProps.staticsite, updating: false, showUpdateDialog: true})
+      } else {
+        this.setState({staticsite: nextProps.staticsite})
+      }
     }
   }
 
@@ -60,29 +70,52 @@ class StaticSite extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { staticsite, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, staticsite, showUpdateDialog } = this.state
     return (
-      <div>
-        <ConfirmDialog
+      <div className='admin-component'>
+        {adminError && 
+          <ConfirmDialog
           isOpen={showUpdateDialog}
-          title={`Static site ${staticsite === 'true' ? 'enabled' : 'disabled'}`}
-          body={`Static site is now ${staticsite === 'true' ? 'enabled' : 'disabled'}`}
+          title={`${displayName} not updated`}
+          body={`${adminError}`}
           handleOk={this.clearDialog}/>
-        <form>
-          <label>
-            <input type='radio' value='true' checked={staticsite === 'true'} onChange={this.handleInputUpdate}/> Enabled
-          </label>
-          <label>
-            <input type='radio' value='false' checked={staticsite !== 'true'} onChange={this.handleInputUpdate}/> Disabled
-          </label>
+        }
+        {adminLoadError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`Unable to load ${displayName} setting`}
+          body={`${adminLoadError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
+          <ConfirmDialog
+            isOpen={showUpdateDialog}
+            title={`Static site ${staticsite === 'true' ? 'enabled' : 'disabled'}`}
+            body={`Static site is now ${staticsite === 'true' ? 'enabled' : 'disabled'}`}
+            handleOk={this.clearDialog}/>
+        }
+        <form className='form-inline'>
+          <div className='form-group' style={{paddingRight: '5px'}}>
+            <label>
+              <input type='radio' value='true' checked={staticsite === 'true'} onChange={this.handleInputUpdate}/> Enabled 
+            </label>
+          </div>
+          <div className='form-group' style={{paddingRight: '10px'}}>
+            <label>
+              <input type='radio' value='false' checked={staticsite !== 'true'} onChange={this.handleInputUpdate}/> Disabled
+            </label>
+          </div>
+        
+          <button className='btn btn-default' onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
         </form>
-        <button onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
       </div>
     )
   }
 }
 
 StaticSite.propTypes = {
+  adminError: PropTypes.string,
+  adminLoadError: PropTypes.string,
   staticsite: PropTypes.string.isRequired,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,

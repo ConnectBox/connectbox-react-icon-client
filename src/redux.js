@@ -1,3 +1,7 @@
+export function clearPasswordUpdated () {
+  return { type: 'CLEAR_PASSWORD_UPDATED' }
+}
+
 export function checkAuthenticated () {
   return { type: 'CHECK_AUTH_REQUESTED' }
 }
@@ -288,7 +292,7 @@ const handlers = {
   },
 
   'GET_PROPERTY_FAILED': (state, action) => {
-    return { ...state, adminError: action.message}
+    return { ...state, adminLoadError: action.message}
   },
 
   'GET_PROPERTY_SUCCEEDED': (state, action) => {
@@ -303,11 +307,13 @@ const handlers = {
   'SET_PROPERTY_SUCCEEDED': (state, action) => {
     const {name, value} = action
     const nameSafe = name.replace('-', '_')
+    const passwordUpdated = nameSafe === 'password'
     return { ...state,
-      [`prop_${nameSafe}`]: value,
+      [`prop_${nameSafe}`]: !passwordUpdated ? value : null,
       latestPropUpdate: nameSafe,
-      authenticated: nameSafe !== 'password',
-      propertyUpdating: false
+      authenticated: !passwordUpdated,
+      propertyUpdating: false,
+      passwordUpdated
     }
   },
 
@@ -320,12 +326,16 @@ const handlers = {
     return { ...state, [`evt_${name.replace('-', '_')}`]: event, authenticated: true, propertyUpdating: false}
   },
 
+  'GET_PROPERTY_START': (state, action) => {
+    return { ...state, adminLoadError: null }
+  },
+
   'TRIGGER_EVENT_START': (state, action) => {
-    return { ...state, propertyUpdating: true }
+    return { ...state, propertyUpdating: true, adminError: null }
   },
 
   'SET_PROPERTY_START': (state, action) => {
-    return { ...state, propertyUpdating: true }
+    return { ...state, propertyUpdating: true, adminError: null }
   },
 
   'CHECK_AUTH_SUCCEEDED': (state, action) => {
@@ -334,5 +344,9 @@ const handlers = {
 
   'CHECK_AUTH_FAILED': (state, action) => {
     return { ...state, authenticated: false}
+  },
+
+  'CLEAR_PASSWORD_UPDATED': (state, action) => {
+    return { ...state, passwordUpdated: false }
   }
 }

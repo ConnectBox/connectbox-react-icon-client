@@ -10,14 +10,16 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { latestPropUpdate, prop_ssid, propertyUpdating } = state
-  return { ssid: prop_ssid, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_ssid, propertyUpdating } = state
+  return { adminError, adminLoadError, ssid: prop_ssid, latestPropUpdate, propertyUpdating }
 }
 
 const mapDispatchToProps = {
   getProperty,
   setProperty
 }
+
+const displayName = 'SSID'
 
 class Ssid extends Component {
   constructor (props) {
@@ -26,7 +28,9 @@ class Ssid extends Component {
     this.state = {
       ssid: props.ssid,
       updating: false,
-      showUpdateDialog: false
+      showUpdateDialog: false,
+      adminError: null,
+      adminLoadError: null
     }
   }
 
@@ -35,10 +39,16 @@ class Ssid extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.latestPropUpdate === 'ssid' && this.state.updating) {
-      this.setState({ssid: nextProps.ssid, updating: false, showUpdateDialog: true})
+    if (nextProps.adminError) {
+      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+    } else if (nextProps.adminLoadError) {
+      this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
-      this.setState({ssid: nextProps.ssid})
+      if (nextProps.latestPropUpdate === 'ssid' && this.state.updating) {
+        this.setState({ssid: nextProps.ssid, updating: false, showUpdateDialog: true})
+      } else {
+        this.setState({ssid: nextProps.ssid})
+      }
     }
   }
 
@@ -60,22 +70,50 @@ class Ssid extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { ssid, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, ssid, showUpdateDialog } = this.state
     return (
-      <div>
-        <ConfirmDialog
+      <div className='admin-component'>
+        {adminError && 
+          <ConfirmDialog
           isOpen={showUpdateDialog}
-          title={`SSID updated to '${ssid}'`}
-          body='Update your wireless network settings, then click OK.'
+          title={`${displayName} not updated`}
+          body={`${adminError}`}
           handleOk={this.clearDialog}/>
-        <input type='text' value={ssid} onChange={this.handleInputUpdate} size='25'/>
-        <button onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
+        }
+        {adminLoadError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`Unable to load ${displayName} setting`}
+          body={`${adminLoadError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
+          <ConfirmDialog
+            isOpen={showUpdateDialog}
+            title={`SSID updated to '${ssid}'`}
+            body='Update your wireless network settings, then click OK.'
+            handleOk={this.clearDialog}/>
+        }
+        <form className='form-inline'>
+          <input
+              className='string form-control admin-input'
+              type='text'
+              value={ssid}
+              onChange={this.handleInputUpdate}/>
+          <button
+            className='btn btn-default'
+            placeholder='Enter SSID'
+            onClick={this.handleUpdate}
+            disabled={propertyUpdating}>Update</button>
+        </form>
       </div>
     )
   }
 }
 
 Ssid.propTypes = {
+  adminError: PropTypes.string,
+  adminLoadError: PropTypes.string,
   ssid: PropTypes.string.isRequired,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,

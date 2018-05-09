@@ -10,14 +10,16 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { latestPropUpdate, prop_ui_config, propertyUpdating } = state
-  return { ui_config: prop_ui_config, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_ui_config, propertyUpdating } = state
+  return { adminError, adminLoadError, ui_config: prop_ui_config, latestPropUpdate, propertyUpdating }
 }
 
 const mapDispatchToProps = {
   getProperty,
   setProperty
 }
+
+const displayName = 'Banner'
 
 class Banner extends Component {
   constructor (props) {
@@ -26,7 +28,9 @@ class Banner extends Component {
     this.state = {
       ui_config: { Client: { banner: ''} },
       updating: false,
-      showUpdateDialog: false
+      showUpdateDialog: false,
+      adminError: null,
+      adminLoadError: null
     }
   }
 
@@ -36,10 +40,16 @@ class Banner extends Component {
 
   componentWillReceiveProps (nextProps) {
     const ui_config = nextProps.ui_config
-    if (nextProps.latestPropUpdate === 'ui_config' && this.state.updating) {
-      this.setState({ui_config, updating: false, showUpdateDialog: true})
+    if (nextProps.adminError) {
+      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+    } else if (nextProps.adminLoadError) {
+      this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
-      this.setState({ui_config})
+      if (nextProps.latestPropUpdate === 'ui_config' && this.state.updating) {
+        this.setState({ui_config, updating: false, showUpdateDialog: true})
+      } else {
+        this.setState({ui_config})
+      }
     }
   }
 
@@ -63,23 +73,43 @@ class Banner extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { ui_config, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, ui_config, showUpdateDialog } = this.state
 
     return (
-      <div>
+      <div className='admin-component'>
+        {adminError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`${displayName} not updated`}
+          body={`${adminError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {adminLoadError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`Unable to load ${displayName} setting`}
+          body={`${adminLoadError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
         <ConfirmDialog
           isOpen={showUpdateDialog}
           title='Banner updated'
           body={`Banner successfully updated`}
           handleOk={this.clearDialog}/>
-        <textarea rows="4" cols="80" onChange={this.handleInputUpdate} value={ui_config.Client.banner}></textarea>
-        <button onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
+        }
+        <form className='form-inline'>
+          <textarea className='string form-control' rows="4" cols="80" onChange={this.handleInputUpdate} value={ui_config.Client.banner}></textarea><br />
+          <button style={{marginTop: '10px'}}  className='btn btn-default' onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
+        </form>
       </div>
     )
   }
 }
 
 Banner.propTypes = {
+  adminError: PropTypes.string,
+  adminLoadError: PropTypes.string,
   ui_config: PropTypes.object.isRequired,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,

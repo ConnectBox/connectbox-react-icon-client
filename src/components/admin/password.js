@@ -1,20 +1,25 @@
 import './admin-component.css'
 
+import ConfirmDialog from './confirm-dialog'
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import {
+  clearPasswordUpdated,
   setProperty
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { adminProps } = state
-  return { adminProps }
+  const { adminError, latestPropUpdate, passwordUpdated } = state
+  return { adminError, latestPropUpdate, passwordUpdated }
 }
 
 const mapDispatchToProps = {
+  clearPasswordUpdated,
   setProperty
 }
+
+const displayName = 'Password'
 
 class Password extends Component {
   constructor (props) {
@@ -23,7 +28,31 @@ class Password extends Component {
     this.state = {
       password: null,
       confirmPassword: null,
-      error: false
+      error: false,
+      adminError: null,
+      showUpdateDialog: false
+    }
+  }
+
+  componentDidMount() {
+    const {adminError, passwordUpdated} = this.props
+    if (adminError) {
+      this.setState({adminError, showUpdateDialog: true})
+    } else {
+      if (passwordUpdated) {
+        this.setState({showUpdateDialog: true})
+      }
+    }
+  }
+
+  componentWillReceiveProps (nextProps) {
+    const {adminError, passwordUpdated} = nextProps
+    if (adminError) {
+      this.setState({adminError, showUpdateDialog: true})
+    } else {
+      if (passwordUpdated) {
+        this.setState({showUpdateDialog: true})
+      }
     }
   }
 
@@ -47,25 +76,54 @@ class Password extends Component {
   handleUpdate = () => {
     const { setProperty } = this.props
     const { password } = this.state
-
     setProperty('password', password)
   }
 
+  clearDialog = () => {
+    const { clearPasswordUpdated } = this.props
+    this.setState({showUpdateDialog: false})
+    clearPasswordUpdated()
+  }
+
   render () {
-    const { error } = this.state
+    const { adminError, showUpdateDialog, error } = this.state
     const className = error ? 'required' : ''
     return (
-      <div>
-        <input className={className} type='password' onChange={this.handleUpdatePassword}/>
-        <input className={className} type='password' onChange={this.handleUpdateConfirmPassword} />
-        <button onClick={this.handleUpdate} disabled={error}>Update</button>
+      <div className='admin-component'>
+        {adminError && 
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title={`${displayName} not updated`}
+          body={`${adminError}`}
+          handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
+          <ConfirmDialog
+          isOpen={showUpdateDialog}
+          title='Password Updated'
+          body={`Password has been successfully updated`}
+          handleOk={this.clearDialog}/>
+        }
+        <form className='form-inline'>
+        <label>
+          <input className={`${className} string form-control admin-input`} type='password' onChange={this.handleUpdatePassword}/> Password
+        </label>
+        <br />
+        <label style={{paddingRight: '5px'}}>
+          <input className={`${className} string form-control admin-input`} type='password' onChange={this.handleUpdateConfirmPassword} /> Confirm
+        </label>
+        <br />
+        <button className='btn btn-default' onClick={this.handleUpdate} disabled={error}>Update</button>
+        </form>
       </div>
     )
   }
 }
 
 Password.propTypes = {
-  adminProps: PropTypes.object.isRequired,
+  adminError: PropTypes.string,
+  latestPropUpdate: PropTypes.string.isRequired,
+  passwordUpdated: PropTypes.bool.isRequired,
   setProperty: PropTypes.func.isRequired
 }
 

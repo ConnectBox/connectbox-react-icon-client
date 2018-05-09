@@ -146,6 +146,7 @@ async function main (publishDir) {
   await copyFileAsync('build/config/default.json', `${configDir}/default.json`)
   await copyFileAsync('build/js/fa-icon-metadata.js', `${jsDir}/fa-icon-metadata.js`)
   await copyFileAsync('build/css/bootstrap.min.css', `${cssDir}/bootstrap.min.css`)
+  await copyFileAsync('build/css/bootstrap-theme.min.css', `${cssDir}/bootstrap-theme.min.css`)
   await copyFileAsync('build/css/font-awesome.min.css', `${cssDir}/font-awesome.min.css`)
   await copyFileAsync('build/css/style.css', `${cssDir}/style.css`)
   await copyFileAsync('build/fonts/FontAwesome.otf', `${fontsDir}/FontAwesome.otf`)
