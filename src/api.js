@@ -32,8 +32,8 @@ export function getProperty (propertyName) {
   return get(`api/${propertyName}`)
 }
 
-export function setProperty (propertyName, propertyValue, wrap) {
-  return put(`api/${propertyName}`, wrap ? {value: propertyValue} : propertyValue)
+export function setProperty (propertyName, propertyValue, wrap, timeout) {
+  return put(`api/${propertyName}`, wrap ? {value: propertyValue} : propertyValue, timeout)
 }
 
 export function triggerEvent (propertyName, eventType) {
@@ -49,14 +49,32 @@ function get (url, defaultValue) {
   })
 }
 
-function post (url, body) {
-  return axios.post(url, body).then(resp => resp.data).catch(e => {
+function post (url, body, timeout) {
+  let config = null
+  if (timeout) {
+    config = {
+      timeout
+    }
+  }
+  return axios.post(url, body, timeout).then(resp => resp.data).catch(e => {
+    if (e.message.startsWith('timeout of')) {
+      e.errorType = 'TIMEOUT'
+    }
     throw e
   })
 }
 
-function put (url, body) {
-  return axios.put(url, body).then(resp => resp.data).catch(e => {
+function put (url, body, timeout) {
+  let config = null
+  if (timeout) {
+    config = {
+      timeout
+    }
+  }
+  return axios.put(url, body, config).then(resp => resp.data).catch(e => {
+    if (e.message.startsWith('timeout of')) {
+      e.errorType = 'TIMEOUT'
+    }
     throw e
   })
 }

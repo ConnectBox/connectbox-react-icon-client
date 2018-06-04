@@ -1,4 +1,5 @@
 import { generateNick } from './utils'
+import { delay } from 'redux-saga'
 import {
   call,
   put,
@@ -46,9 +47,10 @@ function * performCheckAuth (action) {
 
 function * performSetProperty (action) {
   yield put({type: 'SET_PROPERTY_START'})
-  const {propertyName, propertyValue, wrap} = action.payload
+  const {propertyName, propertyValue, timeout, wrap} = action.payload
+  let res
   try {
-    const res = yield call(setProperty, propertyName, propertyValue, wrap)
+    res = yield call(setProperty, propertyName, propertyValue, wrap, timeout)
     const {code} = res
     if (code === 0) {
       yield put({
@@ -60,8 +62,38 @@ function * performSetProperty (action) {
       yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} code: ${code}`})
     }
   } catch (err) {
-    console.error(err)
-    yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} due to unexpected error`})
+    if (err.errorType === 'TIMEOUT' && timeout) {
+      const start = (new Date()).getTime()
+      yield put({type: 'SET_PROPERTY_TIMEOUT_WAIT', name: propertyName})
+
+      // Keep trying to update property until timeout
+      while (true) {
+        try {
+          res = yield call(getProperty, propertyName)
+          const {code, result} = res
+          if (result[0] === propertyValue) {
+            yield put({
+              type: 'SET_PROPERTY_SUCCEEDED',
+              name: propertyName,
+              value: propertyValue
+            })
+            break
+          }
+        } catch (err) {
+        }
+
+        yield delay(500)
+
+        const now = (new Date()).getTime()
+        if (now - start > timeout) {
+          yield put({type: 'SET_PROPERTY_TIMEOUT_EXCEEDED', name: propertyName, message: `Failed to set property ${propertyName} due to timeout`})
+          break
+        }
+      }
+    } else {
+      console.error(err)
+      yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} due to unexpected error`})
+    }
   }
 }
 

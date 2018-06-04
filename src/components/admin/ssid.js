@@ -10,8 +10,8 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { adminError, adminLoadError, latestPropUpdate, prop_ssid, propertyUpdating } = state
-  return { adminError, adminLoadError, ssid: prop_ssid, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_ssid, propertyUpdating, propertyTimeoutWait } = state
+  return { adminError, adminLoadError, ssid: prop_ssid, latestPropUpdate, propertyUpdating, propertyTimeoutWait }
 }
 
 const mapDispatchToProps = {
@@ -61,7 +61,7 @@ class Ssid extends Component {
     const { setProperty } = this.props
     const { ssid } = this.state
     this.setState({updating: true})
-    setProperty('ssid', ssid)
+    setProperty('ssid', ssid, true, 5000)
   }
 
   clearDialog = () => {
@@ -118,6 +118,7 @@ Ssid.propTypes = {
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,
   propertyUpdating: PropTypes.bool.isRequired,
+  propertyTimeoutWait: PropTypes.bool.isRequired,
   setProperty: PropTypes.func.isRequired
 }
 

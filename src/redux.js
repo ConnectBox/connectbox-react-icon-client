@@ -6,8 +6,8 @@ export function checkAuthenticated () {
   return { type: 'CHECK_AUTH_REQUESTED' }
 }
 
-export function setProperty (propertyName, propertyValue, wrap = true, callback) {
-  return { type: 'SET_PROPERTY_REQUESTED', payload: {propertyName, propertyValue, wrap, callback} }
+export function setProperty (propertyName, propertyValue, wrap = true, timeout, callback) {
+  return { type: 'SET_PROPERTY_REQUESTED', payload: {propertyName, propertyValue, wrap, timeout, callback} }
 }
 
 export function getProperty (propertyName, callback) {
@@ -301,7 +301,15 @@ const handlers = {
   },
 
   'SET_PROPERTY_FAILED': (state, action) => {
-    return { ...state, adminError: action.message, propertyUpdating: false}
+    return { ...state, adminError: action.message, propertyUpdating: false, propertyTimeoutWait: false}
+  },
+
+  'SET_PROPERTY_TIMEOUT_WAIT': (state, action) => {
+    return { ...state, propertyTimeoutWait: true }
+  },
+
+  'SET_PROPERTY_TIMEOUT_EXCEEDED': (state, action) => {
+    return { ...state, propertyTimeoutWait: false, propertyUpdating: false, adminError: action.message }
   },
 
   'SET_PROPERTY_SUCCEEDED': (state, action) => {

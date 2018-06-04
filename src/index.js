@@ -49,6 +49,7 @@ let initialState = {
   sentMessages: [],
   textDirection: 'ltr',
   propertyUpdating: false,
+  propertyTimeoutWait: false,
   latestPropUpdate: '',
   prop_ssid: '',
   prop_channel: '1',

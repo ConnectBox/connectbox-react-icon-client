@@ -5330,8 +5330,8 @@ redux-saga-tester@^1.0.319:
   resolved "https://registry.yarnpkg.com/redux-saga-tester/-/redux-saga-tester-1.0.319.tgz#d4fda9408d391d3c188762de318c3b8020da6cf7"
 
 redux-saga@^0.15.4:
-  version "0.15.4"
-  resolved "https://registry.yarnpkg.com/redux-saga/-/redux-saga-0.15.4.tgz#27982a947280053b7ecbb5d3170c837a5fe6b261"
+  version "0.15.6"
+  resolved "https://registry.yarnpkg.com/redux-saga/-/redux-saga-0.15.6.tgz#8638dc522de6c6c0a496fe8b2b5466287ac2dc4d"
 
 redux@^3.7.1:
   version "3.7.1"
