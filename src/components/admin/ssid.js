@@ -61,7 +61,7 @@ class Ssid extends Component {
     const { setProperty } = this.props
     const { ssid } = this.state
     this.setState({updating: true})
-    setProperty('ssid', ssid, true, 5000)
+    setProperty('ssid', ssid, true, 5000, 10000)
   }
 
   clearDialog = () => {

@@ -61,7 +61,7 @@ class Channel extends Component {
     const { setProperty } = this.props
     const { channel } = this.state
     this.setState({updating: true})
-    setProperty('channel', channel, true, 1)
+    setProperty('channel', channel, true, 5000, 10000)
   }
 
   clearDialog = () => {

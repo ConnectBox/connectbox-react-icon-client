@@ -6,8 +6,8 @@ export function checkAuthenticated () {
   return { type: 'CHECK_AUTH_REQUESTED' }
 }
 
-export function setProperty (propertyName, propertyValue, wrap = true, timeout, callback) {
-  return { type: 'SET_PROPERTY_REQUESTED', payload: {propertyName, propertyValue, wrap, timeout, callback} }
+export function setProperty (propertyName, propertyValue, wrap = true, requestTimeout, maxWait, callback) {
+  return { type: 'SET_PROPERTY_REQUESTED', payload: {propertyName, propertyValue, wrap, requestTimeout, maxWait, callback} }
 }
 
 export function getProperty (propertyName, callback) {

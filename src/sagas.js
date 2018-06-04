@@ -47,10 +47,11 @@ function * performCheckAuth (action) {
 
 function * performSetProperty (action) {
   yield put({type: 'SET_PROPERTY_START'})
-  const {propertyName, propertyValue, timeout, wrap} = action.payload
+  const start = (new Date()).getTime()
+  const {propertyName, propertyValue, requestTimeout, maxWait, wrap} = action.payload
   let res
   try {
-    res = yield call(setProperty, propertyName, propertyValue, wrap, timeout)
+    res = yield call(setProperty, propertyName, propertyValue, wrap, requestTimeout)
     const {code} = res
     if (code === 0) {
       yield put({
@@ -62,8 +63,7 @@ function * performSetProperty (action) {
       yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} code: ${code}`})
     }
   } catch (err) {
-    if (err.errorType === 'TIMEOUT' && timeout) {
-      const start = (new Date()).getTime()
+    if (err.errorType === 'TIMEOUT' && requestTimeout && maxWait) {
       yield put({type: 'SET_PROPERTY_TIMEOUT_WAIT', name: propertyName})
 
       // Keep trying to update property until timeout
@@ -85,7 +85,7 @@ function * performSetProperty (action) {
         yield delay(500)
 
         const now = (new Date()).getTime()
-        if (now - start > timeout) {
+        if (now - start > (requestTimeout + maxWait)) {
           yield put({type: 'SET_PROPERTY_TIMEOUT_EXCEEDED', name: propertyName, message: `Failed to set property ${propertyName} due to timeout`})
           break
         }
