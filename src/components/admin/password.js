@@ -26,8 +26,8 @@ class Password extends Component {
     super(props)
 
     this.state = {
-      password: null,
-      confirmPassword: null,
+      password: '',
+      confirmPassword: '',
       error: false,
       adminError: null,
       showUpdateDialog: false
@@ -40,7 +40,7 @@ class Password extends Component {
       this.setState({adminError, showUpdateDialog: true})
     } else {
       if (passwordUpdated) {
-        this.setState({showUpdateDialog: true})
+        this.setState({showUpdateDialog: true, password: '', confirmPassword: ''})
       }
     }
   }
@@ -51,7 +51,7 @@ class Password extends Component {
       this.setState({adminError, showUpdateDialog: true})
     } else {
       if (passwordUpdated) {
-        this.setState({showUpdateDialog: true})
+        this.setState({showUpdateDialog: true, password: '', confirmPassword: ''})
       }
     }
   }
@@ -73,7 +73,7 @@ class Password extends Component {
     this.setState({confirmPassword, error})
   }
 
-  handleUpdate = () => {
+  handleUpdate = (evt) => {
     const { setProperty } = this.props
     const { password } = this.state
     setProperty('password', password)
@@ -86,7 +86,7 @@ class Password extends Component {
   }
 
   render () {
-    const { adminError, showUpdateDialog, error } = this.state
+    const { adminError, showUpdateDialog, error, password, confirmPassword } = this.state
     const className = error ? 'required' : ''
     return (
       <div className='admin-component'>
@@ -104,17 +104,17 @@ class Password extends Component {
           body={`Password has been successfully updated`}
           handleOk={this.clearDialog}/>
         }
-        <form className='form-inline'>
-        <label>
-          <input className={`${className} string form-control admin-input`} type='password' onChange={this.handleUpdatePassword}/> Password
-        </label>
-        <br />
-        <label style={{paddingRight: '5px'}}>
-          <input className={`${className} string form-control admin-input`} type='password' onChange={this.handleUpdateConfirmPassword} /> Confirm
-        </label>
-        <br />
-        <button className='btn btn-default' onClick={this.handleUpdate} disabled={error}>Update</button>
-        </form>
+        <div className='form-inline'>
+          <label>
+            <input value={password} className={`${className} string form-control admin-input`} type='password' onChange={this.handleUpdatePassword}/> Password
+          </label>
+          <br />
+          <label style={{paddingRight: '5px'}}>
+            <input value={confirmPassword} className={`${className} string form-control admin-input`} type='password' onChange={this.handleUpdateConfirmPassword} /> Confirm
+          </label>
+          <br />
+          <button className='btn btn-default' onClick={this.handleUpdate} disabled={error}>Update</button>
+        </div>
       </div>
     )
   }

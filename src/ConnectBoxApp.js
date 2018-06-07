@@ -5,7 +5,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import queryString from 'query-string'
-import { Route, Switch, withRouter } from 'react-router'
+import { Redirect, Route, Switch, withRouter } from 'react-router'
 
 import {
   fetchNick,
@@ -286,7 +286,11 @@ export class ConnectBoxApp extends Component {
 
     return (
       <Switch>
-        <Route path='/admin/' component={AdminPanel} />
+        <Route strict path='/admin/' component={AdminPanel} />
+
+        <Route exact path='/admin' >
+          <Redirect to="/admin/" />
+        </Route>
 
         <Route render={props => (chatPanelShowing ? this.renderChat() : this.renderContent())} />
       </Switch>

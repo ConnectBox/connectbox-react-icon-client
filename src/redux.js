@@ -1,9 +1,25 @@
+export function authenticate (password) {
+  return { type: 'AUTHENTICATE_REQUESTED', payload: { password } }
+}
+
 export function clearPasswordUpdated () {
   return { type: 'CLEAR_PASSWORD_UPDATED' }
 }
 
 export function checkAuthenticated () {
-  return { type: 'CHECK_AUTH_REQUESTED' }
+  const authorization = localStorage.getItem('admin-authorization')
+
+  if (authorization) {
+    const parts = authorization.split(' ')
+    if (parts.length === 2) {
+      const decoded = atob(parts[1])
+      const creds = decoded.split(':')
+      if (creds.length === 2) {
+        return { type: 'AUTHENTICATE_REQUESTED', payload: { password: creds[1] } }
+      }
+    }
+  }
+  return { type: 'AUTHENTICATE_REQUESTED', payload: { password: '' } }
 }
 
 export function setProperty (propertyName, propertyValue, wrap = true, requestTimeout, maxWait, callback) {
@@ -297,7 +313,7 @@ const handlers = {
 
   'GET_PROPERTY_SUCCEEDED': (state, action) => {
     const {name, value} = action
-    return { ...state, [`prop_${name.replace('-', '_')}`]: name === 'ui-config' ? JSON.parse(value) : value, authenticated: true}
+    return { ...state, [`prop_${name.replace('-', '_')}`]: name === 'ui-config' ? JSON.parse(value) : value}
   },
 
   'SET_PROPERTY_FAILED': (state, action) => {
@@ -319,7 +335,6 @@ const handlers = {
     return { ...state,
       [`prop_${nameSafe}`]: !passwordUpdated ? value : null,
       latestPropUpdate: nameSafe,
-      authenticated: !passwordUpdated,
       propertyUpdating: false,
       passwordUpdated
     }
@@ -331,7 +346,7 @@ const handlers = {
 
   'TRIGGER_EVENT_SUCCEEDED': (state, action) => {
     const {name, event} = action
-    return { ...state, [`evt_${name.replace('-', '_')}`]: event, authenticated: true, propertyUpdating: false}
+    return { ...state, [`evt_${name.replace('-', '_')}`]: event, propertyUpdating: false}
   },
 
   'GET_PROPERTY_START': (state, action) => {
@@ -346,15 +361,22 @@ const handlers = {
     return { ...state, propertyUpdating: true, adminError: null }
   },
 
-  'CHECK_AUTH_SUCCEEDED': (state, action) => {
-    return { ...state, authenticated: true}
-  },
-
-  'CHECK_AUTH_FAILED': (state, action) => {
-    return { ...state, authenticated: false}
-  },
-
   'CLEAR_PASSWORD_UPDATED': (state, action) => {
-    return { ...state, passwordUpdated: false }
+    return { ...state, passwordUpdated: false, authorization: null }
+  },
+
+  'AUTHENTICATE_START': (state, action) => {
+    return { ...state, authorization: null }
+  },
+
+  'AUTHENTICATE_SUCCEEDED': (state, action) => {
+    const { authorization } = action
+    localStorage.setItem('admin-authorization', authorization)
+    return { ...state, authorization }
+  },
+
+  'AUTHENTICATE_FAILED': (state, action) => {
+    localStorage.setItem('admin-authorization', null)
+    return { ...state, authorization: null }
   }
 }

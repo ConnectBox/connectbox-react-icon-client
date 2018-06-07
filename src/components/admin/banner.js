@@ -1,5 +1,6 @@
 import './admin-component.css'
 
+import { get } from 'lodash'
 import { connect } from 'react-redux'
 import ConfirmDialog from './confirm-dialog'
 import PropTypes from 'prop-types'
@@ -24,9 +25,8 @@ const displayName = 'Banner'
 class Banner extends Component {
   constructor (props) {
     super(props)
-
     this.state = {
-      ui_config: { Client: { banner: ''} },
+      ui_config: null,
       updating: false,
       showUpdateDialog: false,
       adminError: null,
@@ -39,7 +39,7 @@ class Banner extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    const ui_config = nextProps.ui_config
+    const { ui_config } = nextProps
     if (nextProps.adminError) {
       this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
     } else if (nextProps.adminLoadError) {
@@ -55,7 +55,7 @@ class Banner extends Component {
 
   handleInputUpdate = (evt) => {
     const banner = evt.target.value
-    const ui_config = this.state.ui_config
+    const { ui_config } = this.state
     ui_config.Client.banner = banner
     this.setState({ui_config})
   }
@@ -99,7 +99,7 @@ class Banner extends Component {
           handleOk={this.clearDialog}/>
         }
         <form className='form-inline'>
-          <textarea className='string form-control' rows="4" cols="80" onChange={this.handleInputUpdate} value={ui_config.Client.banner}></textarea><br />
+          <textarea className='string form-control' rows="4" cols="80" onChange={this.handleInputUpdate} value={get(ui_config, 'Client.banner')}></textarea><br />
           <button style={{marginTop: '10px'}}  className='btn btn-default' onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
         </form>
       </div>
@@ -110,7 +110,7 @@ class Banner extends Component {
 Banner.propTypes = {
   adminError: PropTypes.string,
   adminLoadError: PropTypes.string,
-  ui_config: PropTypes.object.isRequired,
+  ui_config: PropTypes.object,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,
   propertyUpdating: PropTypes.bool.isRequired,

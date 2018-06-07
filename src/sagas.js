@@ -1,3 +1,4 @@
+import { get } from 'lodash'
 import { generateNick } from './utils'
 import { delay } from 'redux-saga'
 import {
@@ -22,25 +23,30 @@ const getConfigPath = (state) => state.configPath
 const getConfigFromStore = (state) => state.config
 const getPopularFiles = (state) => state.popularFiles
 const getMaxMessageId = (state) => state.maxMessageId
+const getAuthorization = (state) => state.authorization
 
-function * performCheckAuth (action) {
-  yield put({type: 'CHECK_AUTH_START'})
+function * performAuthenticate (action) {
+  yield put({type: 'AUTHENTICATE_START'})
   try {
-    const res = yield call(getProperty, 'ui-config')
+    const { password } = action.payload
+    const encoded = new Buffer(`admin:${password}`).toString('base64')
+    const authorization = `Basic ${encoded}`
+    const res = yield call(getProperty, {propertyName: 'ui-config', authorization})
     const { code } = res
     if (code === 0) {
       yield put({
-        type: 'CHECK_AUTH_SUCCEEDED'
+        type: 'AUTHENTICATE_SUCCEEDED',
+        authorization
       })
     } else {
       yield put({
-        type: 'CHECK_AUTH_FAILED'
+        type: 'AUTHENTICATE_FAILED'
       })
     }
   } catch (err) {
     console.error(err)
     yield put({
-      type: 'CHECK_AUTH_FAILED'
+      type: 'AUTHENTICATE_FAILED'
     })
   }
 }
@@ -50,9 +56,10 @@ function * performSetProperty (action) {
   const start = (new Date()).getTime()
   const {propertyName, propertyValue, requestTimeout, maxWait, wrap} = action.payload
   let res
+  const authorization = yield select(getAuthorization)
   try {
-    res = yield call(setProperty, propertyName, propertyValue, wrap, requestTimeout)
-    const {code} = res
+    res = yield call(setProperty, {authorization, propertyName, propertyValue, wrap, timeout: requestTimeout})
+    const code = get(res, 'data.code')
     if (code === 0) {
       yield put({
         type: 'SET_PROPERTY_SUCCEEDED',
@@ -69,7 +76,7 @@ function * performSetProperty (action) {
       // Keep trying to update property until timeout
       while (true) {
         try {
-          res = yield call(getProperty, propertyName)
+          res = yield call(getProperty, {authorization, propertyName})
           const {code, result} = res
           if (result[0] === propertyValue) {
             yield put({
@@ -101,7 +108,8 @@ function * performGetProperty (action) {
   yield put({type: 'GET_PROPERTY_START'})
   const {propertyName} = action.payload
   try {
-    const res = yield call(getProperty, propertyName)
+    const authorization = yield select(getAuthorization)
+    const res = yield call(getProperty, {authorization, propertyName})
     const {code, result} = res
     if (code === 0) {
       yield put({
@@ -122,7 +130,8 @@ function * performTriggerEvent (action) {
   yield put({type: 'TRIGGER_EVENT_START'})
   const {propertyName, eventType} = action.payload
   try {
-    const res = yield call(triggerEvent, propertyName, eventType)
+    const authorization = yield select(getAuthorization)
+    const res = yield call(triggerEvent, {authorization, propertyName, eventType})
     const {code} = res
     if (code === 0) {
       yield put({
@@ -186,7 +195,7 @@ function * sendMessage (action) {
   const { message } = action
 
   try {
-    const res = yield call(postMessage, message)
+    const res = yield call(postMessage, {message})
 
     if (res.result && res.result.id) {
       yield put({
@@ -212,7 +221,7 @@ function * fetchNewMessages (action) {
   try {
     yield put({type: 'MESSAGES_FETCH_START'})
     const maxMessageId = yield select(getMaxMessageId)
-    const res = yield call(getMessages, maxMessageId)
+    const res = yield call(getMessages, {max_id: maxMessageId})
     yield put({
       type: 'MESSAGES_FETCH_SUCCEEDED',
       messages: res ? res.result : [],
@@ -247,7 +256,7 @@ function * fetchContent (action) {
     if (needsConfig) {
       try {
         const configPath = yield select(getConfigPath)
-        const config = yield call(getConfig, configPath)
+        const config = yield call(getConfig, {configPath})
 
         yield put({
           type: 'CONFIG_FETCH_SUCCEEDED',
@@ -260,7 +269,7 @@ function * fetchContent (action) {
       }
     }
     const {contentPath} = action.payload
-    const content = yield call(getContent, contentPath)
+    const content = yield call(getContent, {contentPath})
     yield put({
       type: 'CONTENT_FETCH_SUCCEEDED',
       content: content,
@@ -271,7 +280,7 @@ function * fetchContent (action) {
     if (popularFiles === null && (contentPath === '' || contentPath === '/')) {
       const config = yield select(getConfigFromStore)
       try {
-        const stats = yield call(getStats, `${process.env.PUBLIC_URL}/${config.Client.stats_file}`)
+        const stats = yield call(getStats, {statsPath: `${process.env.PUBLIC_URL}/${config.Client.stats_file}`})
         yield put({
           type: 'STATS_FETCH_SUCCEEDED',
           stats: stats
@@ -296,10 +305,10 @@ function * mySaga () {
   yield takeLatest('SAVE_NICK_REQUESTED', saveNick)
   yield takeLatest('FETCH_TEXT_DIRECTION_REQUESTED', fetchTextDirection)
   yield takeLatest('SAVE_TEXT_DIRECTION_REQUESTED', saveTextDirection)
-  yield takeLatest('CHECK_AUTH_REQUESTED', performCheckAuth)
   yield takeEvery('GET_PROPERTY_REQUESTED', performGetProperty)
   yield takeEvery('SET_PROPERTY_REQUESTED', performSetProperty)
   yield takeEvery('TRIGGER_EVENT_REQUESTED', performTriggerEvent)
+  yield takeEvery('AUTHENTICATE_REQUESTED', performAuthenticate)
 }
 
 export default mySaga

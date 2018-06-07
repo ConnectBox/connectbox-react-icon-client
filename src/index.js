@@ -18,7 +18,8 @@ const devTools =
 
 const sagaMiddleware = createSagaMiddleware()
 let initialState = {
-  authenticated: false,
+  authorization: null,
+  authenticateFailed: null,
   chatPanelShowing: false,
   // DEFAULT CONFIG
   config: {
@@ -53,7 +54,7 @@ let initialState = {
   latestPropUpdate: '',
   prop_ssid: '',
   prop_channel: '1',
-  prop_ui_config: {},
+  prop_ui_config: null,
   prop_hostname: '',
   prop_staticsite: 'false',
   passwordUpdated: false

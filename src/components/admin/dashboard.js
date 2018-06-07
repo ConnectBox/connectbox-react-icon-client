@@ -9,6 +9,7 @@ import Password from './password'
 import Reports from './reports'
 import Ssid from './ssid'
 import StaticSite from './static-site'
+import Login from './login'
 import System from './system'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
@@ -34,47 +35,26 @@ import {
 const adminRoot = '/admin/'
 
 function mapStateToProps (state) {
-  const { authenticated, propertyUpdating } = state
-  return { authenticated, propertyUpdating }
+  const { authorization, propertyUpdating } = state
+  return { authorization, propertyUpdating }
 }
 
 const mapDispatchToProps = {
   checkAuthenticated
 }
 
-// TODO Need a footer
-
 class AdminPanel extends Component {
-  constructor (props) {
-    super(props)
-
-    this.state = {
-      authenticating: false
-    }
-  }
-
-  componentWillReceiveProps (nextProps) {
-    const { authenticating } = this.state
-    if (!nextProps.authenticated) {
-      if (!authenticating) {
-        this.setState({authenticating: true})
-        nextProps.checkAuthenticated() // api call triggering authentication
-      }
-    } else {
-      this.setState({authenticating: false})
-    }
+  componentWillMount () {
+    this.props.checkAuthenticated()
   }
 
   render () {
-    const { authenticated, propertyUpdating } = this.props
+    const { authorization, propertyUpdating } = this.props
 
     const { location } = this.props
     const { pathname } = location
-    const selected = pathname === adminRoot ? 'home' : pathname.substring(adminRoot.length)
-
-    if (!authenticated) {
-      return (<div>Authenticating...</div>)
-    }
+    const selected = !authorization ? 'home' : (
+      pathname === adminRoot ? 'home' : pathname.substring(adminRoot.length))
 
     const reportOptions = {
       reports: 1,
@@ -102,20 +82,23 @@ class AdminPanel extends Component {
       <div className={`dashboard ${propertyUpdating ? 'updating' : ''}`}>
         <div className='dashboardHeader'>
           <span className='headerText headerTitle'>ConnectBox</span>
-          <span className={`headerText ${selected === 'home' ? 'selected' : ''}`}><Link to='.'>Home</Link></span>
-          <span className={`headerText ${selected === 'about' ? 'selected' : ''}`}><Link to='about'>About</Link></span>
-          <span className={`headerText ${reportsSelected ? 'selected' : ''}`}><Link to='reports'>Reports</Link></span>
-          <span className={`headerText ${configSelected ? 'selected' : ''}`}><Link to='configuration'>Configuration</Link></span>
+          {authorization && <span className={`headerText ${selected === 'home' ? 'selected' : ''}`}><Link to='.'>Home</Link></span>}
+          {authorization && <span className={`headerText ${selected === 'about' ? 'selected' : ''}`}><Link to='about'>About</Link></span>}
+          {authorization && <span className={`headerText ${reportsSelected ? 'selected' : ''}`}><Link to='reports'>Reports</Link></span>}
+          {authorization && <span className={`headerText ${configSelected ? 'selected' : ''}`}><Link to='configuration'>Configuration</Link></span>}
         </div>
         <div className='dashboardBody'>
           {selected === 'home' &&
             (<div>
               <div className='page-header'><h1>ConnectBox Admin Dashboard</h1></div>
-              <p className='lead'>Configure this ConnectBox. Default user id and password: ('admin'/'connectbox')</p>
+              <p className='lead'>Configure this ConnectBox. Default password: ('connectbox')</p>
             </div>
             )
           }
-          {selected === 'about' &&
+          {!authorization &&
+            <Login />
+          }
+          {authorization && selected === 'about' &&
             (<div>
               <div className='page-header'><h1>About the ConnectBox</h1></div>
               <p className='lead'>ConnectBox Product Information: <a href='https://www.connectbox.technology'>https://www.connectbox.technology</a></p>
@@ -123,7 +106,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'reports' &&
+          {authorization && selected === 'reports' &&
             (<div>
               <div className='page-header'><h1>Reports</h1></div>
               <ul>
@@ -133,7 +116,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'reportsTop10' &&
+          {authorization && selected === 'reportsTop10' &&
             (<div>
               <div className='page-header'><h1>Reports</h1></div>
               <p className='lead'>Top 10 Requests</p>
@@ -142,7 +125,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'reportsAll' &&
+          {authorization && selected === 'reportsAll' &&
             (<div>
               <div className='page-header'><h1>Reports</h1></div>
               <p className='lead'>All Requests</p>
@@ -150,7 +133,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'configuration' &&
+          {authorization && selected === 'configuration' &&
             (<div>
               <div className='page-header'><h1>Configuration</h1></div>
               <ul>
@@ -163,7 +146,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'wap' &&
+          {authorization && selected === 'wap' &&
             (<div>
               <div className='page-header'><h1>Wireless Access Point</h1></div>
               <ul>
@@ -173,7 +156,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'wap-ssid' &&
+          {authorization && selected === 'wap-ssid' &&
             (<div>
               <div className='page-header'><h1>Wireless Access Point</h1></div>
               <p className='lead'>Configure the SSID broadcast by the Wireless Access Point</p>
@@ -181,7 +164,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'wap-channel' &&
+          {authorization && selected === 'wap-channel' &&
             (<div>
               <div className='page-header'><h1>Wireless Access Point</h1></div>
               <p className='lead'>Configure the channel used by the Wireless Access Point</p>
@@ -189,7 +172,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'webserver' &&
+          {authorization && selected === 'webserver' &&
             (<div>
               <div className='page-header'><h1>Web Server</h1></div>
               <ul>
@@ -199,7 +182,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'webserver-staticsite' &&
+          {authorization && selected === 'webserver-staticsite' &&
             (<div>
               <div className='page-header'><h1>Web Server</h1></div>
               <p className='lead'>Static site configuration</p>
@@ -207,7 +190,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'webserver-hostname' &&
+          {authorization && selected === 'webserver-hostname' &&
             (<div>
               <div className='page-header'><h1>Web Server</h1></div>
               <p className='lead'>Web server hostname</p>
@@ -215,7 +198,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'userinterface' &&
+          {authorization && selected === 'userinterface' &&
             (<div>
               <div className='page-header'><h1>User Interface</h1></div>
               <p className='lead'>Banner Message (html or plain text)</p>
@@ -223,7 +206,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'password' &&
+          {authorization && selected === 'password' &&
             (<div>
               <div className='page-header'><h1>Admin Password</h1></div>
               <p className='lead'>Configure the admin dashboard password</p>
@@ -231,7 +214,7 @@ class AdminPanel extends Component {
             </div>
             )
           }
-          {selected === 'system' &&
+          {authorization && selected === 'system' &&
             (<div>
               <div className='page-header'><h1>System</h1></div>
               <p className='lead'>System Functions</p>
@@ -251,7 +234,7 @@ class AdminPanel extends Component {
 }
 
 AdminPanel.propTypes = {
-  authenticated: PropTypes.bool.isRequired,
+  authorization: PropTypes.string,
   checkAuthenticated: PropTypes.func.isRequired,
   propertyUpdating: PropTypes.bool.isRequired
 }
