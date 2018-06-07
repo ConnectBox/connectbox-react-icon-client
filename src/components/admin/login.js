@@ -42,7 +42,6 @@ class Login extends Component {
   handleAuthenticate = () => {
     const { authenticate } = this.props
     const { password } = this.state
-    console.log('setting authenticating to true')
     this.setState({authenticating: true, authenticationError: false})
     authenticate(password)
   }

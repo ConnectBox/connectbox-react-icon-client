@@ -366,7 +366,7 @@ const handlers = {
   },
 
   'AUTHENTICATE_START': (state, action) => {
-    return { ...state, authorization: null }
+    return { ...state, authorization: '' }
   },
 
   'AUTHENTICATE_SUCCEEDED': (state, action) => {
