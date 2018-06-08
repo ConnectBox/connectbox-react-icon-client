@@ -57,7 +57,8 @@ let initialState = {
   prop_ui_config: null,
   prop_hostname: '',
   prop_staticsite: 'false',
-  passwordUpdated: false
+  passwordUpdated: false,
+  version: 'unknown'
 }
 let store = createStore(reducer, initialState, compose(applyMiddleware(sagaMiddleware), devTools()))
 

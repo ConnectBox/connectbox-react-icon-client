@@ -105,13 +105,6 @@ class Ssid extends Component {
     const { adminError, adminLoadError, ssid, timeoutError, showUpdateDialog } = this.state
     return (
       <div className='admin-component'>
-        {adminError && 
-          <ConfirmDialog
-          isOpen={showUpdateDialog}
-          title={`${displayName} not updated`}
-          body={`${adminError}`}
-          handleOk={this.clearDialog}/>
-        }
         {adminLoadError && 
           <ConfirmDialog
           isOpen={showUpdateDialog}
@@ -119,7 +112,7 @@ class Ssid extends Component {
           body={`${adminLoadError}`}
           handleOk={this.clearDialog}/>
         }
-        {timeoutError &&
+        {(adminError || timeoutError) &&
           <ConfirmDialog
             isOpen={showUpdateDialog}
             title={`SSID updated to '${ssid}'`}

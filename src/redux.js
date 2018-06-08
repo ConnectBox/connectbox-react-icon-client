@@ -370,13 +370,14 @@ const handlers = {
   },
 
   'AUTHENTICATE_SUCCEEDED': (state, action) => {
-    const { authorization } = action
+    const { authorization, version } = action
     localStorage.setItem('admin-authorization', authorization)
-    return { ...state, authorization }
+    return { ...state, authorization, version }
   },
 
   'AUTHENTICATE_FAILED': (state, action) => {
+    const { version } = action
     localStorage.setItem('admin-authorization', null)
-    return { ...state, authorization: null }
+    return { ...state, authorization: null, version }
   }
 }

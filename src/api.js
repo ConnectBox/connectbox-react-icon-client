@@ -58,7 +58,7 @@ function get (url, authorization, defaultValue, timeout) {
       Authorization: authorization
     }
   }
-  return axios.get(url, config).then(resp => resp.data).catch(e => {
+  return axios.get(url, config).then(resp => resp).catch(e => {
     if (defaultValue) {
       return defaultValue
     }

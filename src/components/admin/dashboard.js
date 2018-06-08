@@ -36,8 +36,8 @@ import {
 const adminRoot = '/admin/'
 
 function mapStateToProps (state) {
-  const { authorization, propertyUpdating } = state
-  return { authorization, propertyUpdating }
+  const { authorization, propertyUpdating, version } = state
+  return { authorization, propertyUpdating, version }
 }
 
 const mapDispatchToProps = {
@@ -50,7 +50,7 @@ class AdminPanel extends Component {
   }
 
   render () {
-    const { authorization, propertyUpdating } = this.props
+    const { authorization, propertyUpdating, version } = this.props
 
     const { location } = this.props
     const { pathname } = location
@@ -229,6 +229,8 @@ class AdminPanel extends Component {
         <div className='spacer' />
         <div className='dashboardFooter' >
           <span className='footerText'>ConnectBox - <i>share media with wifi</i></span>
+          <span className='spacer' />
+          <span className='footerText'>{version}</span>
         </div>
       </div>
     )
@@ -238,7 +240,8 @@ class AdminPanel extends Component {
 AdminPanel.propTypes = {
   authorization: PropTypes.string,
   checkAuthenticated: PropTypes.func.isRequired,
-  propertyUpdating: PropTypes.bool.isRequired
+  propertyUpdating: PropTypes.bool.isRequired,
+  version: PropTypes.string.isRequired
 }
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(AdminPanel))

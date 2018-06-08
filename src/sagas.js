@@ -32,21 +32,25 @@ function * performAuthenticate (action) {
     const encoded = new Buffer(`admin:${password}`).toString('base64')
     const authorization = `Basic ${encoded}`
     const res = yield call(getProperty, {propertyName: 'ui-config', authorization})
-    const { code } = res
+    const version = get(res, 'headers.x-connectbox-version', 'unknown')
+    const { code } = res.data
     if (code === 0) {
       yield put({
         type: 'AUTHENTICATE_SUCCEEDED',
-        authorization
+        authorization,
+        version
       })
     } else {
       yield put({
-        type: 'AUTHENTICATE_FAILED'
+        type: 'AUTHENTICATE_FAILED',
+        version
       })
     }
   } catch (err) {
     console.error(err)
     yield put({
-      type: 'AUTHENTICATE_FAILED'
+      type: 'AUTHENTICATE_FAILED',
+      version: 'unknown'
     })
   }
 }
@@ -77,7 +81,7 @@ function * performSetProperty (action) {
       while (true) {
         try {
           res = yield call(getProperty, {authorization, propertyName})
-          const {code, result} = res
+          const {code, result} = res.data
           if (result[0] === propertyValue) {
             yield put({
               type: 'SET_PROPERTY_SUCCEEDED',
@@ -99,7 +103,6 @@ function * performSetProperty (action) {
       }
     } else {
       console.error(err)
-      alert(err.name + ': ' + err.message + ' ' + err.errorType)
       yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} due to unexpected error`})
     }
   }
@@ -111,7 +114,7 @@ function * performGetProperty (action) {
   try {
     const authorization = yield select(getAuthorization)
     const res = yield call(getProperty, {authorization, propertyName})
-    const {code, result} = res
+    const {code, result} = res.data
     if (code === 0) {
       yield put({
         type: 'GET_PROPERTY_SUCCEEDED',
@@ -174,7 +177,7 @@ function * fetchTextDirection (action) {
   let textDirection = localStorage.getItem('cb-chat-text-direction')
   if (!textDirection || textDirection === 'undefined') {
     const res = yield call(getDefaultTextDirection)
-    textDirection = res.result
+    textDirection = res.data.result
     localStorage.setItem('cb-chat-text-direction', textDirection)
   }
 
@@ -225,7 +228,7 @@ function * fetchNewMessages (action) {
     const res = yield call(getMessages, {max_id: maxMessageId})
     yield put({
       type: 'MESSAGES_FETCH_SUCCEEDED',
-      messages: res ? res.result : [],
+      messages: res ? res.data.result : [],
       checkMentions: true
     })
   } catch (e) {
@@ -240,7 +243,7 @@ function * fetchMessages (action) {
     const res = yield call(getMessages)
     yield put({
       type: 'MESSAGES_FETCH_SUCCEEDED',
-      messages: res.result
+      messages: res.data.result
     })
   } catch (e) {
     console.error(e)
@@ -261,7 +264,7 @@ function * fetchContent (action) {
 
         yield put({
           type: 'CONFIG_FETCH_SUCCEEDED',
-          config: config
+          config: config.data
         })
       } catch (e) {
         console.error(e.message)
@@ -273,7 +276,7 @@ function * fetchContent (action) {
     const content = yield call(getContent, {contentPath})
     yield put({
       type: 'CONTENT_FETCH_SUCCEEDED',
-      content: content,
+      content: content.data,
       contentPath: contentPath
     })
 
@@ -284,7 +287,7 @@ function * fetchContent (action) {
         const stats = yield call(getStats, {statsPath: `${process.env.PUBLIC_URL}/${config.Client.stats_file}`})
         yield put({
           type: 'STATS_FETCH_SUCCEEDED',
-          stats: stats
+          stats: stats.data
         })
       } catch (e) {
         console.error(e.message)
