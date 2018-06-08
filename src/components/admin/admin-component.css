@@ -38,6 +38,7 @@
     border-style: solid;
     border-width: 1px;
     border-color: #DDD;
+    flex-flow: row wrap;
 }
 
 .dashboardFooter {
@@ -80,6 +81,13 @@
   border-style: solid;
   border-width: 0px 1px 0px 1px;
   border-color: #DDD;
+}
+
+.waiting-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 100;
 }
 
 @media (min-width: 768px) {

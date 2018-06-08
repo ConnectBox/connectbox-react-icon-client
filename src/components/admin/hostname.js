@@ -10,8 +10,8 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { adminError, adminLoadError, latestPropUpdate, prop_hostname, propertyUpdating } = state
-  return { adminError, adminLoadError, hostname: prop_hostname, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_hostname, propertyTimeoutWait, propertyUpdating } = state
+  return { adminError, adminLoadError, hostname: prop_hostname, latestPropUpdate, propertyTimeoutWait, propertyUpdating }
 }
 
 const mapDispatchToProps = {
@@ -30,7 +30,9 @@ class Hostname extends Component {
       updating: false,
       showUpdateDialog: false,
       adminError: null,
-      adminLoadError: null
+      adminLoadError: null,
+      waiting: false,
+      timeoutError: null
     }
   }
 
@@ -39,16 +41,34 @@ class Hostname extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    const { propertyUpdating } = nextProps
+    const { waiting } = this.state
+    if (nextProps.propertyTimeoutWait) {
+      this.setState({waiting: true})
+    }
+
     if (nextProps.adminError) {
-      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+      if (waiting) {
+        this.setState({timeoutError: nextProps.adminError, showUpdateDialog: true})
+      } else {
+        this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+      }
     } else if (nextProps.adminLoadError) {
       this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
       if (nextProps.latestPropUpdate === 'hostname' && this.state.updating) {
-        this.setState({hostname: nextProps.hostname, updating: false, showUpdateDialog: true})
+        this.setState({hostname: nextProps.hostname, showUpdateDialog: true})
       } else {
         this.setState({hostname: nextProps.hostname})
       }
+    }
+
+    // Clear updating
+    if (!propertyUpdating && this.state.updating) {
+      this.setState({updating: false})
+    }
+    if (!nextProps.propertyTimeoutWait && this.state.waiting) {
+      this.setState({waiting: false})
     }
   }
 
@@ -72,7 +92,7 @@ class Hostname extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { adminError, adminLoadError, hostname, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, hostname, showUpdateDialog, timeoutError } = this.state
 
     return (
       <div className='admin-component'>
@@ -90,7 +110,15 @@ class Hostname extends Component {
           body={`${adminLoadError}`}
           handleOk={this.clearDialog}/>
         }
+        {timeoutError &&
+          <ConfirmDialog
+            isOpen={showUpdateDialog}
+            title={`Host name updated to '${hostname}'`}
+            body={`Host name updated to ${hostname}, click OK to continue`}
+            handleOk={this.clearDialog}/>
+        }
         {!adminError &&
+          !timeoutError &&
           <ConfirmDialog
             isOpen={showUpdateDialog}
             title={`Host name updated to '${hostname}'`}

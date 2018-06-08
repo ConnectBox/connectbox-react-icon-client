@@ -10,8 +10,8 @@ import {
 } from '../../redux'
 
 function mapStateToProps (state) {
-  const { adminError, adminLoadError, latestPropUpdate, prop_channel, propertyUpdating } = state
-  return { adminError, adminLoadError, channel: prop_channel, latestPropUpdate, propertyUpdating }
+  const { adminError, adminLoadError, latestPropUpdate, prop_channel, propertyUpdating, propertyTimeoutWait } = state
+  return { adminError, adminLoadError, channel: prop_channel, latestPropUpdate, propertyUpdating, propertyTimeoutWait }
 }
 
 const mapDispatchToProps = {
@@ -30,7 +30,9 @@ class Channel extends Component {
       updating: false,
       showUpdateDialog: false,
       adminError: null,
-      adminLoadError: null
+      adminLoadError: null,
+      waiting: false,
+      timeoutError: null
     }
   }
 
@@ -39,16 +41,34 @@ class Channel extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    const { propertyUpdating } = nextProps
+    const { waiting } = this.state
+    if (nextProps.propertyTimeoutWait) {
+      this.setState({waiting: true})
+    }
+
     if (nextProps.adminError) {
-      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+      if (waiting) {
+        this.setState({timeoutError: nextProps.adminError, showUpdateDialog: true})
+      } else {
+        this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+      }
     } else if (nextProps.adminLoadError) {
       this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
       if (nextProps.latestPropUpdate === 'channel' && this.state.updating) {
-        this.setState({channel: nextProps.channel, updating: false, showUpdateDialog: true})
+        this.setState({channel: nextProps.channel, showUpdateDialog: true})
       } else {
         this.setState({channel: nextProps.channel})
       }
+    }
+
+    // Clear updating
+    if (!propertyUpdating && this.state.updating) {
+      this.setState({updating: false})
+    }
+    if (!nextProps.propertyTimeoutWait && this.state.waiting) {
+      this.setState({waiting: false})
     }
   }
 
@@ -70,7 +90,7 @@ class Channel extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { adminError, adminLoadError, channel, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, timeoutError, channel, showUpdateDialog } = this.state
     return (
       <div className='admin-component'>
         {adminError && 
@@ -87,7 +107,15 @@ class Channel extends Component {
           body={`${adminLoadError}`}
           handleOk={this.clearDialog}/>
         }
+        {timeoutError &&
+          <ConfirmDialog
+            isOpen={showUpdateDialog}
+            title='Wireless channel updating'
+            body={`Update your wireless network settings, then click OK to continue.`}
+            handleOk={this.clearDialog}/>
+        }
         {!adminError &&
+          !timeoutError &&
           <ConfirmDialog
           isOpen={showUpdateDialog}
           title='Wireless channel successfully updated'
@@ -127,6 +155,7 @@ Channel.propTypes = {
   channel: PropTypes.string.isRequired,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,
+  propertyTimeoutWait: PropTypes.bool.isRequired,
   propertyUpdating: PropTypes.bool.isRequired,
   setProperty: PropTypes.func.isRequired
 }

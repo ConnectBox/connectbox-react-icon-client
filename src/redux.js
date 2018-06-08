@@ -307,6 +307,10 @@ const handlers = {
     return { ...state, mention: false, newMessages: false }
   },
 
+  'GET_PROPERTY_START': (state, action) => {
+    return { ...state, adminLoadError: null }
+  },
+
   'GET_PROPERTY_FAILED': (state, action) => {
     return { ...state, adminLoadError: action.message}
   },
@@ -316,8 +320,12 @@ const handlers = {
     return { ...state, [`prop_${name.replace('-', '_')}`]: name === 'ui-config' ? JSON.parse(value) : value}
   },
 
+  'SET_PROPERTY_START': (state, action) => {
+    return { ...state, propertyUpdating: true, adminError: null, propertyTimeoutWait: false }
+  },
+
   'SET_PROPERTY_FAILED': (state, action) => {
-    return { ...state, adminError: action.message, propertyUpdating: false, propertyTimeoutWait: false}
+    return { ...state, adminError: action.message, propertyUpdating: false }
   },
 
   'SET_PROPERTY_TIMEOUT_WAIT': (state, action) => {
@@ -325,7 +333,7 @@ const handlers = {
   },
 
   'SET_PROPERTY_TIMEOUT_EXCEEDED': (state, action) => {
-    return { ...state, propertyTimeoutWait: false, propertyUpdating: false, adminError: action.message }
+    return { ...state, propertyUpdating: false, adminError: action.message }
   },
 
   'SET_PROPERTY_SUCCEEDED': (state, action) => {
@@ -340,6 +348,10 @@ const handlers = {
     }
   },
 
+  'TRIGGER_EVENT_START': (state, action) => {
+    return { ...state, propertyUpdating: true, adminError: null }
+  },
+
   'TRIGGER_EVENT_FAILED': (state, action) => {
     return { ...state, adminError: action.message, propertyUpdating: false}
   },
@@ -347,18 +359,6 @@ const handlers = {
   'TRIGGER_EVENT_SUCCEEDED': (state, action) => {
     const {name, event} = action
     return { ...state, [`evt_${name.replace('-', '_')}`]: event, propertyUpdating: false}
-  },
-
-  'GET_PROPERTY_START': (state, action) => {
-    return { ...state, adminLoadError: null }
-  },
-
-  'TRIGGER_EVENT_START': (state, action) => {
-    return { ...state, propertyUpdating: true, adminError: null }
-  },
-
-  'SET_PROPERTY_START': (state, action) => {
-    return { ...state, propertyUpdating: true, adminError: null }
   },
 
   'CLEAR_PASSWORD_UPDATED': (state, action) => {

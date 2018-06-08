@@ -13,6 +13,7 @@ import Login from './login'
 import System from './system'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
+import WaitPanel from './wait-panel'
 
 import {
   checkAuthenticated
@@ -80,6 +81,7 @@ class AdminPanel extends Component {
 
     return (
       <div className={`dashboard ${propertyUpdating ? 'updating' : ''}`}>
+        <WaitPanel />
         <div className='dashboardHeader'>
           <span className='headerText headerTitle'>ConnectBox</span>
           {authorization && <span className={`headerText ${selected === 'home' ? 'selected' : ''}`}><Link to='.'>Home</Link></span>}

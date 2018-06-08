@@ -30,7 +30,9 @@ class Ssid extends Component {
       updating: false,
       showUpdateDialog: false,
       adminError: null,
-      adminLoadError: null
+      adminLoadError: null,
+      timeoutError: null,
+      waiting: false
     }
   }
 
@@ -39,16 +41,34 @@ class Ssid extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    const { propertyUpdating } = nextProps
+    const { waiting } = this.state
+    if (nextProps.propertyTimeoutWait) {
+      this.setState({waiting: true})
+    }
+
     if (nextProps.adminError) {
-      this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+      if (waiting) {
+        this.setState({timeoutError: nextProps.adminError, showUpdateDialog: true})
+      } else {
+        this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
+      }
     } else if (nextProps.adminLoadError) {
       this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
       if (nextProps.latestPropUpdate === 'ssid' && this.state.updating) {
-        this.setState({ssid: nextProps.ssid, updating: false, showUpdateDialog: true})
+        this.setState({ssid: nextProps.ssid, showUpdateDialog: true})
       } else {
         this.setState({ssid: nextProps.ssid})
       }
+    }
+
+    // Clear updating
+    if (!propertyUpdating && this.state.updating) {
+      this.setState({updating: false})
+    }
+    if (!nextProps.propertyTimeoutWait && this.state.waiting) {
+      this.setState({waiting: false})
     }
   }
 
@@ -70,7 +90,7 @@ class Ssid extends Component {
 
   render () {
     const { propertyUpdating } = this.props
-    const { adminError, adminLoadError, ssid, showUpdateDialog } = this.state
+    const { adminError, adminLoadError, ssid, timeoutError, showUpdateDialog } = this.state
     return (
       <div className='admin-component'>
         {adminError && 
@@ -87,11 +107,19 @@ class Ssid extends Component {
           body={`${adminLoadError}`}
           handleOk={this.clearDialog}/>
         }
-        {!adminError &&
+        {timeoutError &&
           <ConfirmDialog
             isOpen={showUpdateDialog}
             title={`SSID updated to '${ssid}'`}
-            body='Update your wireless network settings, then click OK.'
+            body={`Update your wireless network settings, then click OK to continue.`}
+            handleOk={this.clearDialog}/>
+        }
+        {!adminError &&
+          !timeoutError &&
+          <ConfirmDialog
+            isOpen={showUpdateDialog}
+            title={`SSID updated to '${ssid}'`}
+            body={`Update your wireless network settings, then click OK to continue.`}
             handleOk={this.clearDialog}/>
         }
         <form className='form-inline'>
