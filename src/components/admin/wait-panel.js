@@ -12,7 +12,7 @@ const mapDispatchToProps = {}
 class WaitPanel extends Component {
   render () {
     const { propertyUpdating } = this.props
-    return propertyUpdating && <div className='dialog-overlay'><span className='waiting-modal'>Please wait...</span></div>
+    return propertyUpdating && <div className='dialog-overlay'><span className='waiting-modal loader' /></div>
   }
 }
 

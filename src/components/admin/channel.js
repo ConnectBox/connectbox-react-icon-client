@@ -85,7 +85,19 @@ class Channel extends Component {
   }
 
   clearDialog = () => {
-    this.setState({showUpdateDialog: false})
+    const { getProperty } = this.props
+    const { timeoutError } = this.state
+    this.setState({
+      showUpdateDialog: false,
+      loadError: null,
+      timeoutError: null,
+      adminError: null,
+      updating: false,
+      waiting: false
+    })
+    if (timeoutError) {
+      getProperty('channel')
+    }
   }
 
   render () {
