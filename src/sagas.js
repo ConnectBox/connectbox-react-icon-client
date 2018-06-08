@@ -99,6 +99,7 @@ function * performSetProperty (action) {
       }
     } else {
       console.error(err)
+      alert(err.name + ': ' + err.message)
       yield put({type: 'SET_PROPERTY_FAILED', message: `Failed to set property ${propertyName} due to unexpected error`})
     }
   }
