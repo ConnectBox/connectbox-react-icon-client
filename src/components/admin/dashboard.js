@@ -4,6 +4,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import Banner from './banner'
 import Channel from './channel'
+import Chat from './chat'
 import Hostname from './hostname'
 import Password from './password'
 import Reports from './reports'
@@ -219,6 +220,10 @@ class AdminPanel extends Component {
               <div className='page-header'><h1>User Interface</h1></div>
               <p className='lead'>Banner Message (html or plain text)</p>
               <Banner />
+              <br />
+              <br />
+              <p className='lead'>Chat</p>
+              <Chat />
             </div>
             )
           }
