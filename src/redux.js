@@ -74,6 +74,11 @@ export function setConfigPath (configPath, callback) {
   return { type: 'SET_CONFIG_PATH', payload: {configPath: path} }
 }
 
+export function refreshConfig (callback) {
+  console.log('redux.refreshConfig')
+  return { type: 'REFRESH_CONFIG' }
+}
+
 export function clearMessageNotifications (callback) {
   return { type: 'CLEAR_MESSAGE_NOTIFICATIONS' }
 }
