@@ -145,8 +145,7 @@ export class ConnectBoxApp extends Component {
     }
 
     refreshMessages = () => {
-      const { config: { Client: { chat_disabled } } } = this.props
-      if (!this.props.location.pathname.startsWith('/admin/') && !chat_disabled) {
+      if (!this.props.location.pathname.startsWith('/admin/')) {
         this.props.getNewMessages()
       }
     }
@@ -166,14 +165,9 @@ export class ConnectBoxApp extends Component {
     }
 
     renderChat = () => {
-      const { chat_disabled } = this.props.config.Client
-      if ( !chat_disabled ) {
-        return (
-          <ChatPanel />
-        )
-      } else {
-        return null
-      }
+      return (
+        <ChatPanel />
+      )
     }
 
     banner () {
@@ -187,31 +181,27 @@ export class ConnectBoxApp extends Component {
     }
 
     renderChatButton = () => {
-      const { mention, newMessages, chatOffline, config: { Client: { chat_disabled } } } = this.props
-      if ( !chat_disabled ) {
-        const newMessageOnClass = !mention && newMessages ? 'chat-new-message-on' : ''
-        const newMessageOffClass = !mention && newMessages ? 'chat-new-message-off' : ''
-        const mentionClass = mention ? 'chat-mention' : ''
-        const chatOfflineClass = chatOffline ? 'chat-offline' : ''
-        return (
-          <div className='chat-button' onClick={this.onChatClick}>
-            <i
-              style={{position: 'absolute', top: 0, right: 10, display: !mention && newMessages ? 'block' : 'none'}}
-              className={`fa fa-comments-o fa-lg chat-icon ${newMessageOnClass} ${chatOfflineClass}`}
-              aria-hidden='true'></i>
-            <i
-              style={{position: 'absolute', top: 0, right: 10, display: !mention && newMessages ? 'block' : 'none'}}
-              className={`fa fa-comments fa-lg chat-icon ${newMessageOffClass} ${chatOfflineClass}`}
-              aria-hidden='true'></i>
-            <i
-              style={{position: 'absolute', top: 0, right: 10, display: !newMessages ? 'block' : 'none'}}
-              className={`fa fa-comments fa-lg chat-icon ${mentionClass} ${chatOfflineClass}`}
-              aria-hidden='true'></i>
-          </div>
-        )
-      } else {
-        return null;
-      }
+      const { mention, newMessages, chatOffline } = this.props
+      const newMessageOnClass = !mention && newMessages ? 'chat-new-message-on' : ''
+      const newMessageOffClass = !mention && newMessages ? 'chat-new-message-off' : ''
+      const mentionClass = mention ? 'chat-mention' : ''
+      const chatOfflineClass = chatOffline ? 'chat-offline' : ''
+      return (
+        <div className='chat-button' onClick={this.onChatClick}>
+          <i
+            style={{position: 'absolute', top: 0, right: 10, display: !mention && newMessages ? 'block' : 'none'}}
+            className={`fa fa-comments-o fa-lg chat-icon ${newMessageOnClass} ${chatOfflineClass}`}
+            aria-hidden='true'></i>
+          <i
+            style={{position: 'absolute', top: 0, right: 10, display: !mention && newMessages ? 'block' : 'none'}}
+            className={`fa fa-comments fa-lg chat-icon ${newMessageOffClass} ${chatOfflineClass}`}
+            aria-hidden='true'></i>
+          <i
+            style={{position: 'absolute', top: 0, right: 10, display: !newMessages ? 'block' : 'none'}}
+            className={`fa fa-comments fa-lg chat-icon ${mentionClass} ${chatOfflineClass}`}
+            aria-hidden='true'></i>
+        </div>
+      )
     }
 
     renderContent = () => {

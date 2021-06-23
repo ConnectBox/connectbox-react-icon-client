@@ -7,8 +7,7 @@ import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import {
   setProperty,
-  getProperty,
-  refreshConfig
+  getProperty
 } from '../../redux'
 
 function mapStateToProps (state) {
@@ -17,14 +16,13 @@ function mapStateToProps (state) {
 }
 
 const mapDispatchToProps = {
-  refreshConfig,
   getProperty,
   setProperty
 }
 
-const displayName = 'User Interface Settings'
+const displayName = 'Banner'
 
-class UserInterface extends Component {
+class Banner extends Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -41,7 +39,7 @@ class UserInterface extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    const { ui_config, refreshConfig } = nextProps
+    const { ui_config } = nextProps
     if (nextProps.adminError) {
       this.setState({adminError: nextProps.adminError, showUpdateDialog: true})
     } else if (nextProps.adminLoadError) {
@@ -49,7 +47,6 @@ class UserInterface extends Component {
     } else {
       if (nextProps.latestPropUpdate === 'ui_config' && this.state.updating) {
         this.setState({ui_config, updating: false, showUpdateDialog: true})
-        refreshConfig()
       } else {
         this.setState({ui_config})
       }
@@ -60,13 +57,6 @@ class UserInterface extends Component {
     const banner = evt.target.value
     const { ui_config } = this.state
     ui_config.Client.banner = banner
-    this.setState({ui_config})
-  }
-
-  handleChatInputUpdate = (evt) => {
-    const setting = evt.target.value
-    const { ui_config } = this.state
-    ui_config.Client.chat_disabled = "false" === setting
     this.setState({ui_config})
   }
 
@@ -84,7 +74,6 @@ class UserInterface extends Component {
   render () {
     const { propertyUpdating } = this.props
     const { adminError, adminLoadError, ui_config, showUpdateDialog } = this.state
-    const chatDisabled = get(ui_config, 'Client.chat_disabled', false)
 
     return (
       <div className='admin-component'>
@@ -105,25 +94,12 @@ class UserInterface extends Component {
         {!adminError &&
         <ConfirmDialog
           isOpen={showUpdateDialog}
-          title='User Interface updated'
-          body={`User Interface settings successfully updated`}
+          title='Banner updated'
+          body={`Banner successfully updated`}
           handleOk={this.clearDialog}/>
         }
         <form className='form-inline'>
-          <p className='lead'>Banner Message (html or plain text)</p>
           <textarea className='string form-control' rows="4" cols="80" onChange={this.handleInputUpdate} value={get(ui_config, 'Client.banner')}></textarea><br />
-          <br />
-          <p className='lead'>Chat</p>
-          <div className='form-group' style={{paddingRight: '5px'}}>
-            <label>
-              <input type='radio' value='true' checked={!chatDisabled} onChange={this.handleChatInputUpdate}/> Enabled 
-            </label>
-          </div>
-          <div className='form-group' style={{paddingRight: '10px'}}>
-            <label>
-              <input type='radio' value='false' checked={chatDisabled} onChange={this.handleChatInputUpdate}/> Disabled
-            </label>
-          </div>
           <button style={{marginTop: '10px'}}  className='btn btn-default' onClick={this.handleUpdate} disabled={propertyUpdating}>Update</button>
         </form>
       </div>
@@ -131,15 +107,14 @@ class UserInterface extends Component {
   }
 }
 
-UserInterface.propTypes = {
+Banner.propTypes = {
   adminError: PropTypes.string,
   adminLoadError: PropTypes.string,
   ui_config: PropTypes.object,
   getProperty: PropTypes.func.isRequired,
   latestPropUpdate: PropTypes.string.isRequired,
   propertyUpdating: PropTypes.bool.isRequired,
-  setProperty: PropTypes.func.isRequired,
-  refreshConfig: PropTypes.func.isRequired
+  setProperty: PropTypes.func.isRequired
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(UserInterface)
+export default connect(mapStateToProps, mapDispatchToProps)(Banner)

@@ -69,14 +69,9 @@ export function getNewMessages (callback) {
 export function setConfigPath (configPath, callback) {
   let path = configPath
   if (!path) {
-    path = `${process.env.PUBLIC_URL}/config/default.json?p${Math.random()}`
+    path = `${process.env.PUBLIC_URL}/config/default.json`
   }
   return { type: 'SET_CONFIG_PATH', payload: {configPath: path} }
-}
-
-export function refreshConfig (callback) {
-  console.log('redux.refreshConfig')
-  return { type: 'REFRESH_CONFIG' }
 }
 
 export function clearMessageNotifications (callback) {

@@ -34,8 +34,7 @@ let initialState = {
       'contentRoute': '/content'
     },
     'Client': {
-      'banner': '',
-      'chat_disabled': false,
+      'banner': false,
       'tail_slash': true,
       'display_root_folder_names': true,
       'icon_prefix': '_icon_',
