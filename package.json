@@ -4,7 +4,7 @@
   "private": true,
   "proxy": "http://connectbox/",
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.21.1",
     "prop-types": "^15.7.2",
     "query-string": "^4.3.4",
     "react": "^15.6.1",
