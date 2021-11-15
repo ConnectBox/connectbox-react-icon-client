@@ -4,9 +4,7 @@
     "\\public",
     "\\published",
     "\\src",
-    "\\src\\components",
-    "\\src\\components\\admin"
+    "\\src\\components"
   ],
-  "SelectedNode": "\\src\\components\\admin\\userinterface.js",
   "PreviewInSolutionExplorer": false
 }
