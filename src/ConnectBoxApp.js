@@ -22,7 +22,6 @@ import PopularFileList from './components/PopularFileList'
 import RootFolderList from './components/RootFolderList'
 import FolderList from './components/FolderList'
 import Footer from './components/Footer'
-import AdminPanel from './components/admin/dashboard'
 
 function mapStateToProps (state) {
   const {
@@ -142,12 +141,6 @@ export class ConnectBoxApp extends Component {
     componentWillMount () {
       const queryParams = queryString.parse(this.props.location.search)
       this.props.setConfigPath(queryParams.config)
-    }
-
-    refreshMessages = () => {
-      if (!this.props.location.pathname.startsWith('/admin/')) {
-        this.props.getNewMessages()
-      }
     }
 
     reload (e) {
@@ -284,17 +277,6 @@ export class ConnectBoxApp extends Component {
   render () {
     const { chatPanelShowing } = this.props
 
-    return (
-      <Switch>
-        <Route strict path='/admin/' component={AdminPanel} />
-
-        <Route exact path='/admin' >
-          <Redirect to="/admin/" />
-        </Route>
-
-        <Route render={props => (chatPanelShowing ? this.renderChat() : this.renderContent())} />
-      </Switch>
-    )
   }
 }
 
