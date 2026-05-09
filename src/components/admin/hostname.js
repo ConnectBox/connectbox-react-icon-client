@@ -1,3 +1,8 @@
+/** @fileoverview Admin panel component for changing the device hostname.
+ * After a successful hostname update, the browser must redirect to the new
+ * hostname because the old DNS entry will no longer resolve; clearDialog
+ * performs this redirect instead of simply closing the dialog. */
+
 import './admin-component.css'
 
 import { connect } from 'react-redux'
@@ -9,6 +14,11 @@ import {
   getProperty
 } from '../../redux'
 
+/**
+ * Selects hostname-related state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for hostname value, errors, update status, and timeout flag.
+ */
 function mapStateToProps (state) {
   const { adminError, adminLoadError, latestPropUpdate, prop_hostname, propertyTimeoutWait, propertyUpdating } = state
   return { adminError, adminLoadError, hostname: prop_hostname, latestPropUpdate, propertyTimeoutWait, propertyUpdating }
@@ -21,6 +31,12 @@ const mapDispatchToProps = {
 
 const displayName = 'Hostname'
 
+/**
+ * Admin form for updating the ConnectBox device hostname.
+ * Because changing the hostname makes the current URL invalid, the OK button
+ * in the confirmation dialog redirects the browser to the new hostname rather
+ * than simply closing the dialog.
+ */
 class Hostname extends Component {
   constructor (props) {
     super(props)
@@ -84,6 +100,11 @@ class Hostname extends Component {
     setProperty('hostname', hostname)
   }
 
+  /**
+   * Navigates the browser to the new hostname when the user dismisses the
+   * success dialog. This is necessary because the device's DNS will now resolve
+   * the new name; staying on the old URL would cause 404s or connection errors.
+   */
   clearDialog = () => {
     const { path } = this.props
     const { hostname } = this.state

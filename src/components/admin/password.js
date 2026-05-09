@@ -1,3 +1,7 @@
+/** @fileoverview Admin panel component for changing the admin dashboard password.
+ * Validates that the password and confirm-password fields match before enabling
+ * the Update button, preventing a mismatch from being submitted to the API. */
+
 import './admin-component.css'
 
 import ConfirmDialog from './confirm-dialog'
@@ -21,6 +25,12 @@ const mapDispatchToProps = {
 
 const displayName = 'Password'
 
+/**
+ * Admin form for setting a new admin password.
+ * Both fields are validated on every keystroke using checkPassword; the Update
+ * button is disabled while the fields mismatch. Both fields are empty strings
+ * initially — the current password is not pre-populated for security.
+ */
 class Password extends Component {
   constructor (props) {
     super(props)
@@ -56,7 +66,15 @@ class Password extends Component {
     }
   }
 
-  checkPassword = (password, confirm) => 
+  /**
+   * Returns true when the two password fields are mismatched and non-empty.
+   * The leading empty-string guard prevents showing an error when the user has
+   * not yet typed anything in either field.
+   * @param {string} password - Value from the password field.
+   * @param {string} confirm - Value from the confirm-password field.
+   * @returns {boolean}
+   */
+  checkPassword = (password, confirm) =>
     (password !== '' || confirm !== '') && password !== confirm
 
   handleUpdatePassword = (evt) => {

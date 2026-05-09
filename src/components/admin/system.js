@@ -1,3 +1,9 @@
+/** @fileoverview Admin panel component for triggering system-level operations:
+ * USB unmount, shutdown, reboot, and factory reset. Each action dispatches a
+ * triggerEvent Redux action and shows a confirmation dialog after completion.
+ * The dialog body and title are built dynamically from the selected option
+ * and the success/error state. */
+
 import './admin-component.css'
 
 import { connect } from 'react-redux'
@@ -8,6 +14,11 @@ import {
   triggerEvent
 } from '../../redux'
 
+/**
+ * Selects system-action state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for error state, latest update key, and updating flag.
+ */
 function mapStateToProps (state) {
   const { adminError, latestPropUpdate, propertyUpdating } = state
   return { adminError, latestPropUpdate, propertyUpdating }
@@ -17,6 +28,12 @@ const mapDispatchToProps = {
   triggerEvent
 }
 
+/**
+ * Admin panel for one-shot system actions (unmount USB, shutdown, reboot, reset).
+ * The option radio buttons control what triggerEvent dispatches. Dialog title and
+ * body are computed at render time from the selected option so a single
+ * ConfirmDialog handles all four outcomes.
+ */
 class System extends Component {
   constructor (props) {
     super(props)
@@ -60,6 +77,7 @@ class System extends Component {
     const { propertyUpdating } = this.props
     const { adminError, option, showUpdateDialog } = this.state
 
+    // Compose dialog strings from the selected option and success/error state
     const titleMessage = adminError ? 'Error ' : ''
     const bodyMessage = adminError ? 'not initiated' : 'successfully initiated'
     let action

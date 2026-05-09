@@ -1,3 +1,9 @@
+/** @fileoverview Admin panel component for changing the WiFi access point
+ * channel (1–11). Changing the channel causes hostapd to restart, which
+ * momentarily drops all connected clients; the component therefore uses a
+ * propertyTimeoutWait + polling flow to detect when the AP is back online
+ * and prompts the user to reconnect if necessary. */
+
 import './admin-component.css'
 
 import { connect } from 'react-redux'
@@ -9,6 +15,11 @@ import {
   getProperty
 } from '../../redux'
 
+/**
+ * Selects channel-related state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for channel value, errors, update status, and timeout flag.
+ */
 function mapStateToProps (state) {
   const { adminError, adminLoadError, latestPropUpdate, prop_channel, propertyUpdating, propertyTimeoutWait } = state
   return { adminError, adminLoadError, channel: prop_channel, latestPropUpdate, propertyUpdating, propertyTimeoutWait }
@@ -21,6 +32,13 @@ const mapDispatchToProps = {
 
 const displayName = 'Channel'
 
+/**
+ * Admin form for selecting the WiFi access point channel.
+ * Uses setProperty with a timeout/delay so the saga can wait for the AP to
+ * restart after the change. A timeoutError state is used separately from
+ * adminError to distinguish "AP restarted, reconnect needed" from a genuine
+ * API error.
+ */
 class Channel extends Component {
   constructor (props) {
     super(props)
@@ -40,14 +58,23 @@ class Channel extends Component {
     this.props.getProperty('channel') // api call triggering authentication
   }
 
+  /**
+   * Syncs Redux prop changes into local state and manages the timeout-wait flow.
+   * When propertyTimeoutWait becomes true the saga is polling for the AP to
+   * come back; errors received during that window are classified as timeoutErrors
+   * (expected reconnect prompts) rather than unexpected adminErrors.
+   * @param {Object} nextProps - Incoming props after Redux state update.
+   */
   componentWillReceiveProps (nextProps) {
     const { propertyUpdating } = nextProps
     const { waiting } = this.state
+    // Track when the saga enters the post-change polling wait period
     if (nextProps.propertyTimeoutWait) {
       this.setState({waiting: true})
     }
 
     if (nextProps.adminError) {
+      // An error during the waiting period means the AP restarted; prompt reconnect
       if (waiting) {
         this.setState({timeoutError: nextProps.adminError, showUpdateDialog: true})
       } else {
@@ -56,6 +83,7 @@ class Channel extends Component {
     } else if (nextProps.adminLoadError) {
       this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
+      // Show success dialog only when this component initiated the update
       if (nextProps.latestPropUpdate === 'channel' && this.state.updating) {
         this.setState({channel: nextProps.channel, showUpdateDialog: true})
       } else {
@@ -77,6 +105,11 @@ class Channel extends Component {
     this.setState({channel})
   }
 
+  /**
+   * Submits the new channel value. The 5000/10000 arguments instruct the saga
+   * to wait up to 5 s before polling and up to 10 s total for the AP to
+   * come back online after the restart triggered by the channel change.
+   */
   handleUpdate = () => {
     const { setProperty } = this.props
     const { channel } = this.state
@@ -84,6 +117,11 @@ class Channel extends Component {
     setProperty('channel', channel, true, 5000, 10000)
   }
 
+  /**
+   * Dismisses the result dialog and resets transient update state.
+   * When dismissed after a timeout error (AP reconnect prompt), re-fetches
+   * the channel value to confirm whether the update actually took effect.
+   */
   clearDialog = () => {
     const { getProperty } = this.props
     const { timeoutError } = this.state
@@ -95,6 +133,7 @@ class Channel extends Component {
       updating: false,
       waiting: false
     })
+    // Re-read the current channel from the device after a timeout to verify
     if (timeoutError) {
       getProperty('channel')
     }

@@ -1,3 +1,8 @@
+/** @fileoverview Admin panel component for changing the WiFi SSID broadcast
+ * name. Changing the SSID causes hostapd to restart; the component uses the
+ * same propertyTimeoutWait pattern as Channel to detect when the AP is back
+ * and prompt the user to update their WiFi connection. */
+
 import './admin-component.css'
 
 import { connect } from 'react-redux'
@@ -9,6 +14,11 @@ import {
   getProperty
 } from '../../redux'
 
+/**
+ * Selects SSID-related state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for ssid value, errors, update status, and timeout flag.
+ */
 function mapStateToProps (state) {
   const { adminError, adminLoadError, latestPropUpdate, prop_ssid, propertyUpdating, propertyTimeoutWait } = state
   return { adminError, adminLoadError, ssid: prop_ssid, latestPropUpdate, propertyUpdating, propertyTimeoutWait }
@@ -21,6 +31,12 @@ const mapDispatchToProps = {
 
 const displayName = 'SSID'
 
+/**
+ * Admin form for updating the WiFi access point SSID.
+ * Uses the same timeout-wait flow as Channel because an SSID change also
+ * causes hostapd to restart. After the AP restarts, the user must reconnect
+ * using the new network name; the confirm dialog prompts them to do so.
+ */
 class Ssid extends Component {
   constructor (props) {
     super(props)
@@ -77,6 +93,11 @@ class Ssid extends Component {
     this.setState({ssid})
   }
 
+  /**
+   * Submits the new SSID. The 5000/10000 ms timeout arguments instruct the
+   * saga to wait for the AP to restart and become reachable again before
+   * resolving, using the same polling mechanism as the Channel component.
+   */
   handleUpdate = () => {
     const { setProperty } = this.props
     const { ssid } = this.state

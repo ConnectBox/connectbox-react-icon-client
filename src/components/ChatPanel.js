@@ -1,3 +1,8 @@
+/** @fileoverview Full-screen chat panel component. Handles real-time message
+ * display with automatic scroll-to-bottom (unless the user has manually
+ * scrolled up), nick editing, bidirectional text direction toggling, and
+ * @mention highlighting. */
+
 import './ChatPanel.css'
 
 import {
@@ -13,6 +18,11 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 
+/**
+ * Selects chat-related slices from Redux state.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for messages, sent message IDs, nick, and text direction.
+ */
 function mapStateToProps (state) {
   const { messages, sentMessages, nick, textDirection } = state
   return { messages, sentMessages, nick, textDirection }
@@ -26,6 +36,12 @@ const mapDispatchToProps = {
   toggleChatPanel
 }
 
+/**
+ * Full-screen chat panel for the ConnectBox messaging feature.
+ * Messages are fetched by the parent app and passed via Redux. The panel
+ * auto-scrolls to the latest message unless the user has manually scrolled up,
+ * supports LTR/RTL text direction per message, and highlights @nick mentions.
+ */
 export class ChatPanel extends Component {
   static propTypes = {
     nick: PropTypes.string.isRequired,
@@ -58,6 +74,11 @@ export class ChatPanel extends Component {
     this.props.clearMessageNotifications()
   }
 
+  /**
+   * Scrolls the messages panel to the bottom so the latest message is visible.
+   * Skipped when the user has manually scrolled up to read history, preserving
+   * their scroll position while new messages arrive.
+   */
   updateMessagePanelScrollPosition = () => {
     if (!this.state.userScrolled) {
       const messagesPanel = document.getElementById('messages-panel')
@@ -69,6 +90,12 @@ export class ChatPanel extends Component {
     this.setState({ editNick: true })
   }
 
+  /**
+   * Commits a nick change when the Enter key is pressed (keyCode 13) or
+   * when the input loses focus (blur event). Any other keyup event is ignored
+   * so the user can still type without prematurely saving.
+   * @param {KeyboardEvent|FocusEvent} evt
+   */
   handleUpdateNick = (evt) => {
     if (evt.type === 'keyup' &&
         evt.keyCode !== 13) {
@@ -91,9 +118,15 @@ export class ChatPanel extends Component {
     })
   }
 
+  /**
+   * Dispatches the composed message to the Redux saga for delivery.
+   * Guards against sending empty or whitespace-only strings to avoid
+   * polluting the chat with blank messages.
+   */
   handleMessageSend = () => {
     const { nick, textDirection } = this.props
     const { messageInput } = this.state
+    // Do not send blank messages
     if (messageInput.trim() === '') {
       return
     }
@@ -111,6 +144,13 @@ export class ChatPanel extends Component {
     this.props.saveTextDirection(this.props.textDirection === 'ltr' ? 'rtl' : 'ltr')
   }
 
+  /**
+   * Tracks whether the user has scrolled away from the bottom of the message
+   * list. When the difference between scrollHeight and the visible viewport
+   * bottom (scrollTop + clientHeight) is greater than zero, the user has
+   * scrolled up and auto-scroll should be suppressed.
+   * @param {UIEvent} evt - Scroll event from the messages-panel div.
+   */
   handleScroll = (evt) => {
     const { scrollTop, scrollHeight, clientHeight } = evt.target
     this.setState({
@@ -148,6 +188,14 @@ export class ChatPanel extends Component {
     this.props.toggleChatPanel(false)
   }
 
+  /**
+   * Renders a single message body, wrapping and bolding the @nick mention token
+   * when it appears in the text. Only the first occurrence is highlighted;
+   * the surrounding text is split at that index to preserve the rest verbatim.
+   * @param {Object} message - Message object with at least a `body` string.
+   * @param {string} mentionToken - The string to highlight, e.g. "@Alice".
+   * @returns {JSX.Element|string}
+   */
   renderMessageBody = (message, mentionToken) => {
     const { body } = message
     const mentionIndex = message.body.indexOf(mentionToken)
@@ -183,11 +231,19 @@ export class ChatPanel extends Component {
     )
   }
 
+  /**
+   * Renders the complete chat window with message list and input row.
+   * Messages are stored as a keyed object in Redux for fast lookup by ID;
+   * they are converted to an array and sorted by numeric ID here so the
+   * display order matches insertion order regardless of key iteration order.
+   * @returns {JSX.Element}
+   */
   render () {
     const { messages = {}, sentMessages, nick } = this.props
     const { messageInput } = this.state
 
-    const messageArray = 
+    // Convert the message map to a chronologically sorted array for rendering
+    const messageArray =
       Object.keys(messages)
         .reduce(
           (result, key) => [...result, messages[key]], [])
@@ -208,8 +264,12 @@ export class ChatPanel extends Component {
             onScroll={this.handleScroll}>
             <div className='spacer' />
             {messageArray.map((message, i) => {
+              // Convert the Unix timestamp (seconds) to a Date for locale formatting
               const ts = new Date(0)
               ts.setUTCSeconds(message.timestamp)
+              // A message is "sent" if this client sent it (by ID) OR if the
+              // nick matches — the ID check handles messages sent before a
+              // nick change, and the nick check covers the same-nick case.
               const isSent = sentMessages.includes(message.id) ||
                 message.nick === nick
               const messageStyle = isSent ? 'sent-message' : 'message'

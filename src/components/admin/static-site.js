@@ -1,3 +1,9 @@
+/** @fileoverview Admin panel component for enabling or disabling the nginx
+ * static site vhost. When enabled, the ConnectBox serves a pre-deployed
+ * static HTML site instead of the icon-based media browser on the default
+ * vhost. The value is stored as the string 'true' or 'false' (not a boolean)
+ * to match the API's string-based property encoding. */
+
 import './admin-component.css'
 
 import { connect } from 'react-redux'
@@ -21,6 +27,12 @@ const mapDispatchToProps = {
 
 const displayName = 'Static Site Setting'
 
+/**
+ * Admin toggle for the static site feature.
+ * Radio buttons bind to string values ('true'/'false') rather than booleans
+ * because the ConnectBox API represents this property as a JSON string;
+ * string comparison is used throughout (staticsite === 'true') for consistency.
+ */
 class StaticSite extends Component {
   constructor (props) {
     super(props)

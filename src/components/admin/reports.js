@@ -1,9 +1,22 @@
+/** @fileoverview Admin reports component. Fetches and displays ConnectBox
+ * access statistics from JSON report files (stats.top10.json or stats.json).
+ * The 'stats' report has a two-level category/date hierarchy; the 'stats.top10'
+ * report is flat. Both are rendered in a ReactTable with paging. */
+
 import React, { Component } from 'react'
 import './reports.css'
 import ReactTable from 'react-table'
 import 'react-table/react-table.css'
 import axios from 'axios'
 
+/**
+ * Displays file access statistics from the ConnectBox reporting endpoint.
+ * Supports two report modes:
+ *   - 'stats.top10': a flat list of top-10 resources, filtered by time category.
+ *   - 'stats': a two-level hierarchy (time category → date → resource list).
+ * Category ordering uses a numeric score rather than alphabetical sort so that
+ * 'hour' < 'day' < 'week' < 'month' < 'year' regardless of locale.
+ */
 class Reports extends Component {
   constructor(props) {
     super(props)
@@ -26,6 +39,13 @@ class Reports extends Component {
     this.setState({report})
   }
 
+  /**
+   * Maps a time-bucket category name to a numeric sort position.
+   * Used by categoryComparator to enforce chronological ordering
+   * (hour → day → week → month → year) in the category selector.
+   * @param {string} category - One of 'hour', 'day', 'week', 'month', 'year'.
+   * @returns {number} Sort ordinal (lower = earlier time bucket).
+   */
   scoreCategory = (category) => {
     if (category === 'hour') {
       return 0
@@ -44,6 +64,14 @@ class Reports extends Component {
     return this.scoreCategory(a) - this.scoreCategory(b)
   }
 
+  /**
+   * Fetches a report JSON file and normalises it into the component state shape.
+   * For the 'stats' report the raw array-of-dates structure is converted to a
+   * date-keyed object so the table can look up rows by date without a linear
+   * scan. The currently selected category is preserved across reloads so that
+   * changing the subcategory selector does not reset the category picker.
+   * @param {string} name - URL path of the report JSON file, e.g. '/stats.top10.json'.
+   */
   loadReport = async (name) => {
     try {
       const res = await axios.get(name)
@@ -53,6 +81,8 @@ class Reports extends Component {
       let category
       let reportData = {}
       if (this.state.report === 'stats') {
+        // The full stats report is structured as { category: [{ date, stats }] };
+        // convert to { category: { date: stats } } for O(1) lookup by date.
         categories = Object.keys(res.data)
         categories.forEach(key => {
           reportData[key] = res.data[key].reduce((result, value) => {
@@ -61,13 +91,16 @@ class Reports extends Component {
           }, {})
         })
 
+        // Preserve the user's category selection; default to the first on first load
         if (this.state.category === null) {
           category = categories.length > 0 ? categories[0] : null
         } else {
           category = this.state.category
         }
+        // Dates sorted in descending order so the most recent period appears first
         subcategories = Object.keys(reportData[category]).sort().reverse()
       } else {
+        // top10 report is already flat: { category: [resource] }
         reportData = res.data
         categories = Object.keys(res.data)
         if (this.state.category === null) {
@@ -80,6 +113,7 @@ class Reports extends Component {
 
       categories.sort(this.categoryComparator)
 
+      // Keep the user's subcategory selection; default to the most recent date
       const subcategory = this.state.subcategory === null ? (subcategories.length > 0 ? subcategories[0] : null) : this.state.subcategory
 
       this.setState({reportData,

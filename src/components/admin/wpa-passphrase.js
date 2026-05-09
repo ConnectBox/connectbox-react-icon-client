@@ -1,3 +1,8 @@
+/** @fileoverview Admin panel component for setting the WPA2 passphrase on the
+ * WiFi access point. Validates the passphrase locally before submission:
+ * empty string removes the passphrase (open network), 8–63 ASCII printable
+ * characters are required for a valid WPA passphrase per the 802.11i spec. */
+
 import './admin-component.css'
 
 import { connect } from 'react-redux'
@@ -8,6 +13,11 @@ import {
   setProperty
 } from '../../redux'
 
+/**
+ * Selects WPA passphrase state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for passphrase value, errors, update status, and timeout flag.
+ */
 function mapStateToProps (state) {
   const { adminError, adminLoadError, latestPropUpdate, prop_passphrase, propertyUpdating, propertyTimeoutWait } = state
   return { adminError, adminLoadError, passphrase: prop_passphrase, latestPropUpdate, propertyUpdating, propertyTimeoutWait }
@@ -19,6 +29,13 @@ const mapDispatchToProps = {
 
 const displayName = 'WPA Passphrase'
 
+/**
+ * Admin form for configuring the WPA2 passphrase.
+ * An empty submission removes the passphrase, making the AP an open network.
+ * Validation runs on every keystroke and the Update button is disabled until
+ * the passphrase meets length and character encoding requirements. Uses the
+ * same propertyTimeoutWait reconnect flow as SSID and Channel.
+ */
 class WpaPassphrase extends Component {
   constructor (props) {
     super(props)
@@ -71,6 +88,11 @@ class WpaPassphrase extends Component {
     this.setState({passphrase, ...this.isValid(passphrase)})
   }
 
+  /**
+   * Submits the new passphrase. The 5000/10000 ms timeout arguments mirror
+   * the Channel/SSID pattern — the AP must restart after a passphrase change
+   * and clients need to reconnect with the new credentials.
+   */
   handleUpdate = () => {
     const { setProperty } = this.props
     const { passphrase } = this.state
@@ -89,8 +111,18 @@ class WpaPassphrase extends Component {
     })
   }
 
+  /**
+   * Validates the passphrase against WPA2 requirements per IEEE 802.11i:
+   *   - Empty string is valid (signals passphrase removal, open network).
+   *   - 8 to 63 characters in length.
+   *   - All characters must be ASCII printable (charCode 32–126).
+   * Returns an object with validLength and validEncoding flags used to control
+   * inline error messages and the Update button disabled state.
+   * @param {string} passphrase - The candidate passphrase string.
+   * @returns {{validLength: boolean, validEncoding: boolean}}
+   */
   isValid = passphrase => {
-    // empty passphrase clears it
+    // Empty passphrase is allowed — it removes WPA protection (open network)
     if (passphrase.length === 0) {
       return {
         validLength: true,
@@ -98,7 +130,7 @@ class WpaPassphrase extends Component {
       }
     }
 
-    // length check
+    // WPA2 requires 8–63 characters
     if (passphrase.length < 8 || passphrase.length > 63) {
       return {
         validLength: false,
@@ -106,7 +138,7 @@ class WpaPassphrase extends Component {
       }
     }
 
-    // check characters
+    // Only ASCII printable characters (space through ~) are valid per the spec
     const invalids = passphrase.split('').filter(char => {
       const charCode = char.charCodeAt(0)
       return charCode < 32 || charCode > 126

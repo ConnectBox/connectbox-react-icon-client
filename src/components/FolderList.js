@@ -1,9 +1,18 @@
+/** @fileoverview Generic folder/file listing component used for both sub-folder
+ * contents and top-level loose files. Renders a responsive table of
+ * FolderListEntry rows for each item in the content array. */
+
 import './FolderList.css'
 
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import FolderListEntry from './FolderListEntry'
 
+/**
+ * Renders a table listing for folder contents or top-level files.
+ * Handles case 2 (sub-folder contents) and case 4 (top-level loose files)
+ * of the content display matrix. Each row delegates to FolderListEntry.
+ */
 class FolderList extends Component {
     static propTypes = {
         content: PropTypes.array.isRequired,

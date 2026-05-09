@@ -1,3 +1,9 @@
+/** @fileoverview Admin dashboard container component. Acts as the single-page
+ * router for all admin sub-views (reports, configuration, WAP, webserver, etc.)
+ * by deriving the active panel from the React Router pathname rather than
+ * maintaining its own route table. Authentication state gates all content
+ * display after the Login component succeeds. */
+
 import './admin-component.css'
 
 import React, { Component } from 'react'
@@ -36,6 +42,11 @@ import {
 
 const adminRoot = '/admin/'
 
+/**
+ * Selects dashboard-level state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props for authorization token, update-in-progress flag, and firmware version.
+ */
 function mapStateToProps (state) {
   const { authorization, propertyUpdating, version } = state
   return { authorization, propertyUpdating, version }
@@ -45,6 +56,12 @@ const mapDispatchToProps = {
   checkAuthenticated
 }
 
+/**
+ * Top-level admin panel container. Derives the active sub-view from the URL
+ * pathname (e.g. '/admin/wap-ssid' → 'wap-ssid') and renders the corresponding
+ * component inline. This avoids a second layer of React Router nested routes
+ * while still keeping URLs bookmarkable and shareable.
+ */
 class AdminPanel extends Component {
   componentWillMount () {
     this.props.checkAuthenticated()
@@ -55,9 +72,11 @@ class AdminPanel extends Component {
 
     const { location } = this.props
     const { pathname } = location
+    // When not authenticated, always show the home/login view regardless of URL
     const selected = !authorization ? 'home' : (
       pathname === adminRoot ? 'home' : pathname.substring(adminRoot.length))
 
+    // Lookup tables used to highlight the correct header tab when a sub-page is active
     const reportOptions = {
       reports: 1,
       reportsTop10: 1,

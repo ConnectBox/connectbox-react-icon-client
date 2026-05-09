@@ -1,3 +1,7 @@
+/** @fileoverview Root-level folder icon grid component. Displays top-level
+ * content directories as large icon tiles rather than a list, making it the
+ * primary navigation interface when no sub-folder is selected. */
+
 import './FolderList.css'
 import './RootFolderList.css'
 
@@ -5,6 +9,12 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import RootFolderListEntry from './RootFolderListEntry'
 
+/**
+ * Renders the home-screen icon grid of top-level content directories.
+ * Each directory is represented by a RootFolderListEntry tile. The 'collapsed'
+ * CSS class on the table removes default Bootstrap cell padding so icons fill
+ * the available width.
+ */
 class RootFolderList extends Component {
     static propTypes = {
         content: PropTypes.array.isRequired,

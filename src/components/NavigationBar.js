@@ -1,9 +1,19 @@
+/** @fileoverview Breadcrumb navigation bar component. Parses the current
+ * content path into clickable crumb segments and shows a reload button with
+ * a CSS spinner while content is loading. */
+
 import './NavigationBar.css'
 
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router-dom'
 
+/**
+ * Renders a breadcrumb trail from the root home icon to the current directory.
+ * Each segment becomes a clickable hash-link except the last (current) segment,
+ * which is rendered as plain text. An animated refresh icon acts as the reload
+ * button and shows a CSS rotation animation while content is loading.
+ */
 class NavigationBar extends Component {
     static propTypes = {
         contentPath: PropTypes.string.isRequired,
@@ -17,10 +27,19 @@ class NavigationBar extends Component {
         this.pathParts = this.pathParts.bind(this)
     }
 
+    /**
+     * Splits the current contentPath into an array of breadcrumb objects,
+     * each with a cumulative path and a display name. An empty segment at the
+     * start (from splitting a leading slash) is labelled '<root>' and rendered
+     * as the home icon rather than as text.
+     * @returns {Array<{path: string, name: string}>}
+     */
     pathParts () {
       const { contentPath } = this.props
+      // Strip a bare slash so split('/') doesn't produce a leading empty segment
       let parts = (contentPath === '/' ? '': contentPath).split('/')
       let up = ''
+      // Build cumulative paths so each crumb link points to the correct depth
       for (var i = 0, l = parts.length; i < l; i++) {
         const path = up + parts[i]
         up = path + '/'
@@ -29,6 +48,13 @@ class NavigationBar extends Component {
       return parts
     }
 
+  /**
+   * Builds and renders the ordered breadcrumb list.
+   * The last path segment gets flex-basis: 100% so it fills remaining bar
+   * width and truncates with an ellipsis when the path is deep. The root
+   * element is always rendered as a home icon link regardless of depth.
+   * @returns {JSX.Element}
+   */
   render () {
     let pathElements = []
     const pathParts = this.pathParts()
@@ -36,6 +62,7 @@ class NavigationBar extends Component {
       const part = pathParts[i]
       const className = part.name !== '<root>' ? 'navbar-element' : null;
       const style = {};
+      // Give the final (current) segment all remaining bar width for long paths
       if (part.name !== '<root>') {
         if (i === pathParts.length - 1) {
           style['flex-basis'] = '100%';

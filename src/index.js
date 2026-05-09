@@ -1,3 +1,7 @@
+/** @fileoverview Application entry point. Configures the Redux store with saga
+ * middleware and Redux DevTools support, then mounts the root React component
+ * wrapped in a Redux Provider and BrowserRouter. */
+
 // import './index.css'
 
 import React from 'react'
@@ -12,6 +16,9 @@ import reducer from './redux'
 import mySaga from './sagas'
 import { BrowserRouter } from 'react-router-dom'
 
+// Polyfill String.prototype.startsWith for browsers (e.g. older Android WebView)
+// that don't yet support ES6. The eslint disable is intentional — extending
+// native prototypes is the correct approach for a polyfill.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill#Polyfill
 if (!String.prototype.startsWith) {
   String.prototype.startsWith = function (search, pos) { // eslint-disable-line no-extend-native
@@ -19,11 +26,17 @@ if (!String.prototype.startsWith) {
   }
 }
 
+// Use the Redux DevTools browser extension when available, otherwise fall back
+// to a no-op enhancer so the compose() call below is always valid.
 const devTools =
   (typeof window === 'object' && window.devToolsExtension) ||
   (() => noop => noop)
 
 const sagaMiddleware = createSagaMiddleware()
+
+// initialState provides the default values for every Redux slice so the app
+// can render safely before any async fetches complete. The config block here
+// mirrors the shape of the server-side default.json loaded by setConfigPath.
 let initialState = {
   authorization: null,
   authenticateFailed: null,

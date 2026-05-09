@@ -1,3 +1,21 @@
+/**
+ * @fileoverview Redux-saga side-effect handlers for the ConnectBox React icon client.
+ *
+ * Each generator function handles one async workflow: authentication, content
+ * fetching, chat, admin property read/write, and nick/text-direction persistence.
+ * The root saga mySaga() wires all handlers via takeLatest / takeEvery so that
+ * only the most recent content/message fetch is in flight at any time while
+ * property writes can overlap.
+ *
+ * Key behaviours:
+ * - performSetProperty: on TIMEOUT, enters a polling loop retrying getProperty
+ *   until the value matches or (requestTimeout + maxWait) is exceeded.
+ * - performTriggerEvent: treats NETWORK_ERROR as success because mobile devices
+ *   often drop the connection when a network-resetting event fires.
+ * - fetchContent: lazily loads config on first content fetch, then fetches stats
+ *   only on the root path and only if popularFiles has not yet been loaded.
+ */
+
 import { get } from 'lodash'
 import { generateNick } from './utils'
 import { delay } from 'redux-saga'
@@ -25,6 +43,12 @@ const getPopularFiles = (state) => state.popularFiles
 const getMaxMessageId = (state) => state.maxMessageId
 const getAuthorization = (state) => state.authorization
 
+/**
+ * Handle AUTHENTICATE_REQUESTED.
+ * Builds a Basic-auth header from the given password, calls getProperty('ui-config')
+ * to verify credentials, and dispatches AUTHENTICATE_SUCCEEDED (stores authorization
+ * in localStorage) or AUTHENTICATE_FAILED accordingly.
+ */
 function * performAuthenticate (action) {
   yield put({type: 'AUTHENTICATE_START'})
   try {
@@ -55,6 +79,14 @@ function * performAuthenticate (action) {
   }
 }
 
+/**
+ * Handle SET_PROPERTY_REQUESTED.
+ * Attempts to PUT the property value. On TIMEOUT (when requestTimeout and maxWait
+ * are set), switches to a 500 ms polling loop that GETs the property until it
+ * matches the intended value or total elapsed time exceeds requestTimeout + maxWait.
+ * Dispatches SET_PROPERTY_SUCCEEDED, SET_PROPERTY_FAILED, SET_PROPERTY_TIMEOUT_WAIT,
+ * or SET_PROPERTY_TIMEOUT_EXCEEDED as appropriate.
+ */
 function * performSetProperty (action) {
   yield put({type: 'SET_PROPERTY_START'})
   const start = (new Date()).getTime()
@@ -108,6 +140,11 @@ function * performSetProperty (action) {
   }
 }
 
+/**
+ * Handle GET_PROPERTY_REQUESTED.
+ * Reads a named property from the admin API and dispatches GET_PROPERTY_SUCCEEDED
+ * with the first result value, or GET_PROPERTY_FAILED on error.
+ */
 function * performGetProperty (action) {
   yield put({type: 'GET_PROPERTY_START'})
   const {propertyName} = action.payload
@@ -130,6 +167,12 @@ function * performGetProperty (action) {
   }
 }
 
+/**
+ * Handle TRIGGER_EVENT_REQUESTED.
+ * POSTs an event type to a named property endpoint. NETWORK_ERROR is treated as
+ * success because mobile devices often drop the connection when the device resets
+ * its network interface in response to the event (e.g. changing WiFi SSID).
+ */
 function * performTriggerEvent (action) {
   yield put({type: 'TRIGGER_EVENT_START'})
   const {propertyName, eventType} = action.payload
@@ -163,6 +206,11 @@ function * performTriggerEvent (action) {
   }
 }
 
+/**
+ * Handle FETCH_NICK_REQUESTED.
+ * Reads 'cb-chat-nick' from localStorage. If absent or 'undefined', generates a
+ * random nick with generateNick() and persists it for the session.
+ */
 function * fetchNick (action) {
   let nick = localStorage.getItem('cb-chat-nick')
   if (!nick || nick === 'undefined') {
@@ -176,6 +224,10 @@ function * fetchNick (action) {
   })
 }
 
+/**
+ * Handle SAVE_NICK_REQUESTED.
+ * Persists the user's chosen nick to localStorage and dispatches SAVE_NICK_SUCCEEDED.
+ */
 function * saveNick (action) {
   localStorage.setItem('cb-chat-nick', action.nick)
   yield put({
@@ -184,6 +236,11 @@ function * saveNick (action) {
   })
 }
 
+/**
+ * Handle FETCH_TEXT_DIRECTION_REQUESTED.
+ * Reads 'cb-chat-text-direction' from localStorage; if absent, fetches the server
+ * default and caches it. On any error falls back to 'ltr'.
+ */
 function * fetchTextDirection (action) {
   let textDirection = localStorage.getItem('cb-chat-text-direction')
   try {
@@ -206,6 +263,10 @@ function * fetchTextDirection (action) {
   }
 }
 
+/**
+ * Handle SAVE_TEXT_DIRECTION_REQUESTED.
+ * Persists the chosen text direction to localStorage and dispatches SAVE_TEXT_DIRECTION_SUCCEEDED.
+ */
 function * saveTextDirection (action) {
   localStorage.setItem('cb-chat-text-direction', action.textDirection)
   yield put({
@@ -214,6 +275,11 @@ function * saveTextDirection (action) {
   })
 }
 
+/**
+ * Handle MESSAGE_SEND_REQUESTED.
+ * Posts a chat message. On success immediately triggers a NEW_MESSAGES_FETCH_REQUESTED
+ * so the sender's message appears without waiting for the next poll cycle.
+ */
 function * sendMessage (action) {
   const { message } = action
 
@@ -240,6 +306,11 @@ function * sendMessage (action) {
   }
 }
 
+/**
+ * Handle NEW_MESSAGES_FETCH_REQUESTED.
+ * Fetches messages with id > maxMessageId (incremental poll). Sets checkMentions
+ * so the reducer scans for @nick mentions in new messages.
+ */
 function * fetchNewMessages (action) {
   try {
     yield put({type: 'MESSAGES_FETCH_START'})
@@ -256,6 +327,11 @@ function * fetchNewMessages (action) {
   }
 }
 
+/**
+ * Handle MESSAGES_FETCH_REQUESTED.
+ * Fetches the full message history (no max_id filter). Used when opening the
+ * chat panel for the first time.
+ */
 function * fetchMessages (action) {
   try {
     yield put({type: 'MESSAGES_FETCH_START'})
@@ -270,7 +346,13 @@ function * fetchMessages (action) {
   }
 }
 
-// worker Saga: will be fired on USER_FETCH_REQUESTED actions
+/**
+ * Handle CONTENT_FETCH_REQUESTED.
+ * 1. Lazily loads config JSON on first call (needsConfig flag).
+ * 2. Fetches the directory listing for the requested content path.
+ * 3. At the root path, also fetches the stats file for popular-files display
+ *    (only once — skipped if popularFiles is already in state).
+ */
 function * fetchContent (action) {
   try {
     yield put({type: 'LOADING_START'})
@@ -319,6 +401,12 @@ function * fetchContent (action) {
   }
 }
 
+/**
+ * Root saga. Wires all action types to their handler generators.
+ * takeLatest cancels any in-flight saga of the same type before starting a new
+ * one (used for navigation and message fetches where only the newest request matters).
+ * takeEvery allows concurrent sagas (used for property writes that must all complete).
+ */
 function * mySaga () {
   yield takeLatest('CONTENT_FETCH_REQUESTED', fetchContent)
   yield takeLatest('MESSAGES_FETCH_REQUESTED', fetchMessages)

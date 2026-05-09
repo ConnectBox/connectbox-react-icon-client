@@ -1,3 +1,7 @@
+/** @fileoverview Admin panel component for configuring the HTML banner message
+ * displayed at the top of the content browser. Reads and writes the
+ * Client.banner field inside the ui-config property on the ConnectBox API. */
+
 import './admin-component.css'
 
 import { get } from 'lodash'
@@ -10,6 +14,11 @@ import {
   getProperty
 } from '../../redux'
 
+/**
+ * Selects banner-relevant state slices from Redux.
+ * @param {Object} state - Full Redux state tree.
+ * @returns {Object} Props including ui_config, error states, and update tracking.
+ */
 function mapStateToProps (state) {
   const { adminError, adminLoadError, latestPropUpdate, prop_ui_config, propertyUpdating } = state
   return { adminError, adminLoadError, ui_config: prop_ui_config, latestPropUpdate, propertyUpdating }
@@ -22,6 +31,12 @@ const mapDispatchToProps = {
 
 const displayName = 'Banner'
 
+/**
+ * Admin form for viewing and updating the HTML banner message shown to users.
+ * The banner is stored as a field within the ui-config object property;
+ * the full ui_config object must be fetched and re-submitted on save because
+ * the API does not support partial updates to nested fields.
+ */
 class Banner extends Component {
   constructor (props) {
     super(props)
@@ -38,6 +53,14 @@ class Banner extends Component {
     this.props.getProperty('ui-config')
   }
 
+  /**
+   * Syncs incoming Redux prop changes into local component state.
+   * Error conditions are prioritised first so the correct dialog title and
+   * body are shown. The success dialog is only triggered when this component
+   * initiated the update (this.state.updating), preventing false positives
+   * from unrelated prop changes.
+   * @param {Object} nextProps - Incoming props after Redux state update.
+   */
   componentWillReceiveProps (nextProps) {
     const { ui_config } = nextProps
     if (nextProps.adminError) {
@@ -45,6 +68,7 @@ class Banner extends Component {
     } else if (nextProps.adminLoadError) {
       this.setState({adminLoadError: nextProps.adminLoadError, showUpdateDialog: true})
     } else {
+      // Only show the success dialog when this component triggered the update
       if (nextProps.latestPropUpdate === 'ui_config' && this.state.updating) {
         this.setState({ui_config, updating: false, showUpdateDialog: true})
       } else {
@@ -53,6 +77,12 @@ class Banner extends Component {
     }
   }
 
+  /**
+   * Updates the banner field within the local ui_config copy as the user types.
+   * Mutates the object in place before calling setState so the textarea
+   * remains a controlled component without a full object clone on each keystroke.
+   * @param {InputEvent} evt - Change event from the textarea.
+   */
   handleInputUpdate = (evt) => {
     const banner = evt.target.value
     const { ui_config } = this.state
